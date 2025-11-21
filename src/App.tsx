@@ -1,26 +1,17 @@
 import React from 'react';
-import logo from './logo.svg';
 import './App.css';
+import { DashboardPage } from './components/DashboardPage';
+import { ApiProvider } from './context/ApiContext';
+import { MockEventApi } from './api/dashboardEventApi';
 
-function App() {
+const App: React.FC = () => {
+  const eventApi = React.useMemo(() => new MockEventApi(), []);
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <ApiProvider eventApi={eventApi}>
+      <DashboardPage />
+    </ApiProvider>
   );
-}
+};
 
 export default App;
