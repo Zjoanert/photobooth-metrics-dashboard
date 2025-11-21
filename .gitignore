@@ -1,6 +1,6 @@
 dist
 # package lock
-package-lock.json
+# (keep tracked to satisfy CI)
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
 # dependencies
