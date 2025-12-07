@@ -13,8 +13,8 @@ interface SettingsContextValue {
 }
 
 const DEFAULT_SETTINGS: DashboardSettings = {
-  apiMode: 'mock',
-  apiBaseUrl: 'http://localhost:3001',
+  apiMode: 'http',
+  apiBaseUrl: 'http://localhost:8092',
 };
 
 const STORAGE_KEY = 'dashboardSettings';

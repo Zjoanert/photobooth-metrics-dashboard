@@ -21,6 +21,16 @@ const createInitialPresets = (): DashboardPreset[] => {
       decimals: 0,
     },
     {
+      id: 'total-prints',
+      type: 'kpi',
+      label: 'Total prints',
+      presetKey: 'totalPrints',
+      endpointKey: 'totalPrints',
+      timeMode: 'global',
+      unit: '',
+      decimals: 0,
+    },
+    {
       id: 'avg-photo-time',
       type: 'kpi',
       label: 'Avg. photo time (s)',
