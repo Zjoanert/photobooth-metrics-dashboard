@@ -1,4 +1,5 @@
 import { KpiResult, TimeRange, TimeSeriesPoint } from '../dashboardTypes';
+import { Event } from './eventsApi';
 
 export interface EventApi {
   getTotalPhotos(range: TimeRange): Promise<KpiResult>;
@@ -22,18 +23,69 @@ const buildQuery = (params: Record<string, string | number | undefined>) => {
   return normalized ? `?${normalized}` : '';
 };
 
+const ENDPOINT_MAP: Record<
+  string,
+  { applicationName: string; eventName: string; metric: 'count' | 'average' | 'sum' }
+> = {
+  totalPhotos: { applicationName: 'frontend', eventName: 'totalPhotos', metric: 'sum' },
+  avgPhotoDuration: {
+    applicationName: 'frontend',
+    eventName: 'avgPhotoDuration',
+    metric: 'average',
+  },
+  avgUploadDuration: {
+    applicationName: 'frontend',
+    eventName: 'avgUploadDuration',
+    metric: 'average',
+  },
+  uploadSpeed: { applicationName: 'frontend', eventName: 'uploadSpeed', metric: 'average' },
+  totalPrints: { applicationName: 'print', eventName: 'totalPrints', metric: 'sum' },
+};
+
+const getRangeStart = (range: TimeRange): string | undefined => {
+  const now = new Date();
+  switch (range) {
+    case TimeRange.Today: {
+      const start = new Date(now);
+      start.setHours(0, 0, 0, 0);
+      return start.toISOString();
+    }
+    case TimeRange.Month: {
+      const start = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
+      return start.toISOString();
+    }
+    case TimeRange.Always:
+    default:
+      return undefined;
+  }
+};
+
 export class HttpEventApi implements EventApi {
   constructor(private baseUrl: string) {
     this.baseUrl = baseUrl.replace(/\/$/, '');
   }
 
-  private async fetchJson<T>(path: string, params: Record<string, string>) {
-    const query = buildQuery(params);
-    const response = await fetch(`${this.baseUrl}${path}${query}`);
+  private async fetchEvents(
+    endpointKey: string,
+    range: TimeRange,
+  ): Promise<Event[]> {
+    const config = ENDPOINT_MAP[endpointKey];
+    if (!config) {
+      throw new Error(`Unknown endpoint key: ${endpointKey}`);
+    }
+
+    const start = getRangeStart(range);
+    const query = buildQuery({
+      applicationName: config.applicationName,
+      eventName: config.eventName,
+      start,
+    });
+
+    const response = await fetch(`${this.baseUrl}/events${query}`);
     if (!response.ok) {
       throw new Error(`Request failed: ${response.status} ${response.statusText}`);
     }
-    return response.json() as Promise<T>;
+    return response.json() as Promise<Event[]>;
   }
 
   getTotalPhotos(range: TimeRange): Promise<KpiResult> {
@@ -52,15 +104,39 @@ export class HttpEventApi implements EventApi {
     return this.getSeriesByEndpoint('uploadSpeed', range);
   }
 
-  getKpiByEndpoint(endpointKey: string, range: TimeRange): Promise<KpiResult> {
-    return this.fetchJson<KpiResult>(`/kpi/${endpointKey}`, { range });
+  async getKpiByEndpoint(endpointKey: string, range: TimeRange): Promise<KpiResult> {
+    const config = ENDPOINT_MAP[endpointKey];
+    if (!config) {
+      throw new Error(`Unknown KPI endpoint: ${endpointKey}`);
+    }
+
+    const events = await this.fetchEvents(endpointKey, range);
+
+    switch (config.metric) {
+      case 'average': {
+        const sum = events.reduce((acc, event) => acc + event.value, 0);
+        const value = events.length ? sum / events.length : 0;
+        return { value };
+      }
+      case 'sum': {
+        const value = events.reduce((acc, event) => acc + event.value, 0);
+        return { value };
+      }
+      case 'count':
+      default: {
+        return { value: events.length };
+      }
+    }
   }
 
-  getSeriesByEndpoint(
+  async getSeriesByEndpoint(
     endpointKey: string,
     range: TimeRange,
   ): Promise<TimeSeriesPoint[]> {
-    return this.fetchJson<TimeSeriesPoint[]>(`/series/${endpointKey}`, { range });
+    const events = await this.fetchEvents(endpointKey, range);
+    return events
+      .map((event) => ({ timestamp: event.timestamp, value: event.value }))
+      .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
   }
 }
 

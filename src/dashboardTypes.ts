@@ -12,7 +12,8 @@ export type PresetKey =
   | 'totalPhotos'
   | 'avgPhotoDuration'
   | 'avgUploadDuration'
-  | 'uploadSpeed';
+  | 'uploadSpeed'
+  | 'totalPrints';
 
 export interface TileConfig {
   id: string;

@@ -24,6 +24,12 @@ const presetOptions: { key: PresetKey; label: string; endpointKey: string; type:
     type: 'kpi',
   },
   {
+    key: 'totalPrints',
+    label: 'Total prints',
+    endpointKey: 'totalPrints',
+    type: 'kpi',
+  },
+  {
     key: 'uploadSpeed',
     label: 'Upload speed',
     endpointKey: 'uploadSpeed',
