@@ -4,5 +4,5 @@ import App from './App';
 
 test('renders dashboard title', () => {
   render(<App />);
-  expect(screen.getByText(/Foto Monitoring/i)).toBeInTheDocument();
+  expect(screen.getAllByText(/Foto Monitoring/i).length).toBeGreaterThan(0);
 });

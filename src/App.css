@@ -19,6 +19,34 @@ body {
   margin: 0;
 }
 
+.app-shell {
+  min-height: 100vh;
+}
+
+.top-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 24px;
+  background: var(--panel);
+  border-bottom: 1px solid var(--border);
+  box-shadow: var(--shadow);
+}
+
+.app-title {
+  margin: 0;
+}
+
+.nav-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.nav-actions button.active {
+  background: var(--primary);
+  color: white;
+}
+
 .dashboard-page {
   padding: 24px;
   max-width: 1200px;
@@ -272,4 +300,35 @@ button.secondary {
 .preset-hint {
   color: var(--muted);
   margin-top: 8px;
+}
+
+.settings-page {
+  padding: 32px 24px;
+  max-width: 760px;
+  margin: 0 auto;
+}
+
+.settings-card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  box-shadow: var(--shadow);
+  padding: 24px;
+}
+
+.settings-card h2 {
+  margin-top: 0;
+  margin-bottom: 4px;
+}
+
+.settings-form .actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.success-text {
+  color: var(--success);
+  font-weight: 700;
 }
