@@ -12,6 +12,58 @@ export interface EventApi {
   ): Promise<TimeSeriesPoint[]>;
 }
 
+const buildQuery = (params: Record<string, string | number | undefined>) => {
+  const search = new URLSearchParams();
+  Object.entries(params).forEach(([key, value]) => {
+    if (value === undefined) return;
+    search.append(key, String(value));
+  });
+  const normalized = search.toString();
+  return normalized ? `?${normalized}` : '';
+};
+
+export class HttpEventApi implements EventApi {
+  constructor(private baseUrl: string) {
+    this.baseUrl = baseUrl.replace(/\/$/, '');
+  }
+
+  private async fetchJson<T>(path: string, params: Record<string, string>) {
+    const query = buildQuery(params);
+    const response = await fetch(`${this.baseUrl}${path}${query}`);
+    if (!response.ok) {
+      throw new Error(`Request failed: ${response.status} ${response.statusText}`);
+    }
+    return response.json() as Promise<T>;
+  }
+
+  getTotalPhotos(range: TimeRange): Promise<KpiResult> {
+    return this.getKpiByEndpoint('totalPhotos', range);
+  }
+
+  getAveragePhotoDuration(range: TimeRange): Promise<KpiResult> {
+    return this.getKpiByEndpoint('avgPhotoDuration', range);
+  }
+
+  getAverageUploadDuration(range: TimeRange): Promise<KpiResult> {
+    return this.getKpiByEndpoint('avgUploadDuration', range);
+  }
+
+  getUploadSpeedSeries(range: TimeRange): Promise<TimeSeriesPoint[]> {
+    return this.getSeriesByEndpoint('uploadSpeed', range);
+  }
+
+  getKpiByEndpoint(endpointKey: string, range: TimeRange): Promise<KpiResult> {
+    return this.fetchJson<KpiResult>(`/kpi/${endpointKey}`, { range });
+  }
+
+  getSeriesByEndpoint(
+    endpointKey: string,
+    range: TimeRange,
+  ): Promise<TimeSeriesPoint[]> {
+    return this.fetchJson<TimeSeriesPoint[]>(`/series/${endpointKey}`, { range });
+  }
+}
+
 export class MockEventApi implements EventApi {
   private randomDelay() {
     return 300 + Math.random() * 300;
