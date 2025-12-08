@@ -13,6 +13,8 @@ export interface ListLogsParams {
   applicationId: string;
   levels?: LogLevel[];
   range?: TimeRange;
+  from?: string;
+  to?: string;
 }
 
 export interface LogsApi {
@@ -63,7 +65,7 @@ export class HttpLogsApi implements LogsApi {
   }
 
   async listLogs(params: ListLogsParams): Promise<LogEntry[]> {
-    const { from, to } = getRangeBounds(params.range);
+    const { from, to } = params.from || params.to ? { from: params.from, to: params.to } : getRangeBounds(params.range);
     const query = buildQueryString({
       level: params.levels?.length ? params.levels.join(',') : undefined,
       from,
@@ -126,7 +128,7 @@ const buildMockTimeline = (applicationId: string): LogEntry[] => {
 
 export class MockLogsApi implements LogsApi {
   async listLogs(params: ListLogsParams): Promise<LogEntry[]> {
-    const { from, to } = getRangeBounds(params.range);
+    const { from, to } = params.from || params.to ? { from: params.from, to: params.to } : getRangeBounds(params.range);
     const fromTime = from ? new Date(from).getTime() : undefined;
     const toTime = to ? new Date(to).getTime() : undefined;
 
