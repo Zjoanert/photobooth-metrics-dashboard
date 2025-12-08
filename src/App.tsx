@@ -12,6 +12,10 @@ const AppShell: React.FC = () => {
   const [page, setPage] = React.useState<ActivePage>('dashboard');
   const { settings } = useSettings();
 
+  React.useEffect(() => {
+    document.documentElement.setAttribute('data-theme', settings.theme);
+  }, [settings.theme]);
+
   const eventApi = React.useMemo(() => {
     return settings.apiMode === 'http'
       ? new HttpEventApi(settings.apiBaseUrl)

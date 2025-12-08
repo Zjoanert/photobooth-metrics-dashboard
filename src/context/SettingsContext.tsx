@@ -1,10 +1,12 @@
 import React from 'react';
 
 export type ApiMode = 'mock' | 'http';
+export type ThemeMode = 'light' | 'dark';
 
 export interface DashboardSettings {
   apiMode: ApiMode;
   apiBaseUrl: string;
+  theme: ThemeMode;
 }
 
 interface SettingsContextValue {
@@ -15,6 +17,7 @@ interface SettingsContextValue {
 const DEFAULT_SETTINGS: DashboardSettings = {
   apiMode: 'http',
   apiBaseUrl: 'http://localhost:8092',
+  theme: 'light',
 };
 
 const STORAGE_KEY = 'dashboardSettings';
@@ -30,6 +33,7 @@ const readSettings = (): DashboardSettings => {
     return {
       apiMode: parsed.apiMode === 'http' ? 'http' : 'mock',
       apiBaseUrl: parsed.apiBaseUrl || DEFAULT_SETTINGS.apiBaseUrl,
+      theme: parsed.theme === 'dark' ? 'dark' : DEFAULT_SETTINGS.theme,
     };
   } catch (error) {
     console.warn('Failed to read settings, falling back to defaults', error);
