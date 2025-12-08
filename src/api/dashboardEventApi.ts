@@ -1,12 +1,17 @@
-import { KpiResult, TimeRange, TimeSeriesPoint } from '../dashboardTypes';
+import { KpiResult, KpiStat, TimeRange, TimeSeriesPoint } from '../dashboardTypes';
 import { Event } from './eventsApi';
+import { EventStats } from './eventsApi.types';
 
 export interface EventApi {
   getTotalPhotos(range: TimeRange): Promise<KpiResult>;
   getAveragePhotoDuration(range: TimeRange): Promise<KpiResult>;
   getAverageUploadDuration(range: TimeRange): Promise<KpiResult>;
   getUploadSpeedSeries(range: TimeRange): Promise<TimeSeriesPoint[]>;
-  getKpiByEndpoint(endpointKey: string, range: TimeRange): Promise<KpiResult>;
+  getKpiByEndpoint(
+    endpointKey: string,
+    range: TimeRange,
+    stat?: KpiStat,
+  ): Promise<KpiResult>;
   getSeriesByEndpoint(
     endpointKey: string,
     range: TimeRange,
@@ -25,21 +30,33 @@ const buildQuery = (params: Record<string, string | number | undefined>) => {
 
 const ENDPOINT_MAP: Record<
   string,
-  { applicationName: string; eventName: string; metric: 'count' | 'average' | 'sum' }
+  { applicationName: string; eventName: string; defaultStat: KpiStat }
 > = {
-  totalPhotos: { applicationName: 'frontend', eventName: 'totalPhotos', metric: 'sum' },
+  totalPhotos: { applicationName: 'frontend', eventName: 'totalPhotos', defaultStat: 'sum' },
   avgPhotoDuration: {
     applicationName: 'frontend',
     eventName: 'avgPhotoDuration',
-    metric: 'average',
+    defaultStat: 'average',
   },
   avgUploadDuration: {
     applicationName: 'frontend',
     eventName: 'avgUploadDuration',
-    metric: 'average',
+    defaultStat: 'average',
   },
-  uploadSpeed: { applicationName: 'frontend', eventName: 'uploadSpeed', metric: 'average' },
-  totalPrints: { applicationName: 'print', eventName: 'totalPrints', metric: 'sum' },
+  uploadSpeed: {
+    applicationName: 'frontend',
+    eventName: 'uploadSpeed',
+    defaultStat: 'average',
+  },
+  totalPrints: { applicationName: 'print', eventName: 'totalPrints', defaultStat: 'sum' },
+};
+
+export const getDefaultKpiStatForEndpoint = (endpointKey: string): KpiStat => {
+  const config = ENDPOINT_MAP[endpointKey];
+  if (!config) {
+    return 'count';
+  }
+  return config.defaultStat;
 };
 
 const getRangeStart = (range: TimeRange): string | undefined => {
@@ -88,6 +105,29 @@ export class HttpEventApi implements EventApi {
     return response.json() as Promise<Event[]>;
   }
 
+  private async fetchStats(
+    endpointKey: string,
+    range: TimeRange,
+  ): Promise<EventStats> {
+    const config = ENDPOINT_MAP[endpointKey];
+    if (!config) {
+      throw new Error(`Unknown endpoint key: ${endpointKey}`);
+    }
+
+    const from = getRangeStart(range);
+    const query = buildQuery({
+      applicationName: config.applicationName,
+      eventName: config.eventName,
+      from,
+    });
+
+    const response = await fetch(`${this.baseUrl}/events/stats${query}`);
+    if (!response.ok) {
+      throw new Error(`Request failed: ${response.status} ${response.statusText}`);
+    }
+    return response.json() as Promise<EventStats>;
+  }
+
   getTotalPhotos(range: TimeRange): Promise<KpiResult> {
     return this.getKpiByEndpoint('totalPhotos', range);
   }
@@ -104,29 +144,22 @@ export class HttpEventApi implements EventApi {
     return this.getSeriesByEndpoint('uploadSpeed', range);
   }
 
-  async getKpiByEndpoint(endpointKey: string, range: TimeRange): Promise<KpiResult> {
+  async getKpiByEndpoint(
+    endpointKey: string,
+    range: TimeRange,
+    stat?: KpiStat,
+  ): Promise<KpiResult> {
     const config = ENDPOINT_MAP[endpointKey];
     if (!config) {
       throw new Error(`Unknown KPI endpoint: ${endpointKey}`);
     }
 
-    const events = await this.fetchEvents(endpointKey, range);
+    const stats = await this.fetchStats(endpointKey, range);
+    const selectedStat = stat ?? config.defaultStat;
+    const rawValue = stats[selectedStat];
+    const value = rawValue ?? 0;
 
-    switch (config.metric) {
-      case 'average': {
-        const sum = events.reduce((acc, event) => acc + event.value, 0);
-        const value = events.length ? sum / events.length : 0;
-        return { value };
-      }
-      case 'sum': {
-        const value = events.reduce((acc, event) => acc + event.value, 0);
-        return { value };
-      }
-      case 'count':
-      default: {
-        return { value: events.length };
-      }
-    }
+    return { value };
   }
 
   async getSeriesByEndpoint(
@@ -175,6 +208,14 @@ export class MockEventApi implements EventApi {
     return this.simulateDelay({ value, trendPercent: trend });
   }
 
+  private pickStatValue(
+    stat: KpiStat | undefined,
+    values: Partial<Record<KpiStat, number>>,
+  ): number {
+    const selectedStat = stat ?? 'count';
+    return values[selectedStat] ?? 0;
+  }
+
   async getUploadSpeedSeries(range: TimeRange): Promise<TimeSeriesPoint[]> {
     const points: TimeSeriesPoint[] = [];
     const now = new Date();
@@ -191,14 +232,35 @@ export class MockEventApi implements EventApi {
   async getKpiByEndpoint(
     endpointKey: string,
     range: TimeRange,
+    stat?: KpiStat,
   ): Promise<KpiResult> {
     switch (endpointKey) {
       case 'totalPhotos':
-        return this.getTotalPhotos(range);
+        return this.simulateDelay({
+          value: this.pickStatValue(stat, {
+            sum: (await this.getTotalPhotos(range)).value,
+            count: (await this.getTotalPhotos(range)).value,
+          }),
+          trendPercent: 5,
+        });
       case 'avgPhotoDuration':
-        return this.getAveragePhotoDuration(range);
+        return this.simulateDelay({
+          value: this.pickStatValue(stat, {
+            average: (await this.getAveragePhotoDuration(range)).value,
+            min: 2.1,
+            max: 3.3,
+          }),
+          trendPercent: 0,
+        });
       case 'avgUploadDuration':
-        return this.getAverageUploadDuration(range);
+        return this.simulateDelay({
+          value: this.pickStatValue(stat, {
+            average: (await this.getAverageUploadDuration(range)).value,
+            min: 0.9,
+            max: 1.4,
+          }),
+          trendPercent: -3,
+        });
       default:
         return this.simulateDelay({ value: 42, trendPercent: 0 });
     }

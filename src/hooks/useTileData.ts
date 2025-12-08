@@ -30,6 +30,7 @@ export function useTileData(
           const kpi = await eventApi.getKpiByEndpoint(
             tile.endpointKey,
             effectiveRange,
+            tile.kpiStat,
           );
           if (!cancelled) setState({ isLoading: false, kpi });
         } else {
@@ -52,7 +53,7 @@ export function useTileData(
     return () => {
       cancelled = true;
     };
-  }, [tile.type, tile.endpointKey, effectiveRange, eventApi]);
+  }, [tile.type, tile.endpointKey, tile.kpiStat, effectiveRange, eventApi]);
 
   return state;
 }
