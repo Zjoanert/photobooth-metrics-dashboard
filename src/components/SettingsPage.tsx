@@ -5,6 +5,7 @@ export const SettingsPage: React.FC = () => {
   const { settings, updateSettings } = useSettings();
   const [apiMode, setApiMode] = useState(settings.apiMode);
   const [apiBaseUrl, setApiBaseUrl] = useState(settings.apiBaseUrl);
+  const [theme, setTheme] = useState(settings.theme);
   const [saved, setSaved] = useState(false);
 
   const handleSubmit = (event: React.FormEvent) => {
@@ -12,7 +13,7 @@ export const SettingsPage: React.FC = () => {
     setSaved(false);
 
     const trimmed = apiBaseUrl.trim() || 'http://localhost:3001';
-    updateSettings({ apiMode, apiBaseUrl: trimmed });
+    updateSettings({ apiMode, apiBaseUrl: trimmed, theme });
     setSaved(true);
   };
 
@@ -59,6 +60,30 @@ export const SettingsPage: React.FC = () => {
               Applied to all KPI and time-series requests when HTTP mode is enabled.
             </small>
           </label>
+
+          <fieldset className="field">
+            <legend>Theme</legend>
+            <div className="option-row">
+              <label className="option">
+                <input
+                  type="radio"
+                  name="theme"
+                  checked={theme === 'light'}
+                  onChange={() => setTheme('light')}
+                />
+                Light mode
+              </label>
+              <label className="option">
+                <input
+                  type="radio"
+                  name="theme"
+                  checked={theme === 'dark'}
+                  onChange={() => setTheme('dark')}
+                />
+                Dark mode
+              </label>
+            </div>
+          </fieldset>
 
           <div className="actions">
             <button type="submit" className="primary">
