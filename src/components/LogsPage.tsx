@@ -1,8 +1,7 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { LogLevel } from '../api/logsApi';
-import { TimeRange } from '../dashboardTypes';
 import { useLogsData } from '../hooks/useLogsData';
-import { TIME_RANGE_LABELS } from '../utils/timeRange';
+import { useAvailableLogDates } from '../hooks/useAvailableLogDates';
 
 const APPLICATIONS = [
   { id: 'frontend', label: 'Frontend' },
@@ -25,15 +24,28 @@ const normalizeMessage = (message: string | string[]): string => {
 
 export const LogsPage: React.FC = () => {
   const [selectedApp, setSelectedApp] = useState<string>(APPLICATIONS[0].id);
+  const [customAppInput, setCustomAppInput] = useState<string>('');
   const [selectedLevels, setSelectedLevels] = useState<LogLevel[]>([
     'error',
     'warn',
     'info',
     'log',
   ]);
-  const [range, setRange] = useState<TimeRange>(TimeRange.Today);
+  const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  const [dateError, setDateError] = useState<string | null>(null);
 
-  const { entries, error, isLoading } = useLogsData(selectedApp, selectedLevels, range);
+  const { dates: availableDates, error: datesError, isLoading: isLoadingDates } =
+    useAvailableLogDates(selectedApp);
+  const { entries, error, isLoading } = useLogsData(selectedApp, selectedLevels, selectedDate);
+
+  useEffect(() => {
+    if (availableDates.length) {
+      setSelectedDate((prev) => (prev && availableDates.includes(prev) ? prev : availableDates[0]));
+      setDateError(null);
+    } else {
+      setSelectedDate(null);
+    }
+  }, [availableDates]);
 
   const sortedEntries = useMemo(
     () => [...entries].sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()),
@@ -46,6 +58,34 @@ export const LogsPage: React.FC = () => {
     );
   };
 
+  const handleAppTabClick = (appId: string) => {
+    setSelectedApp(appId);
+    setCustomAppInput('');
+  };
+
+  const handleCustomAppChange = (value: string) => {
+    setCustomAppInput(value);
+    const trimmed = value.trim();
+    if (trimmed) {
+      setSelectedApp(trimmed);
+    }
+  };
+
+  const handleDateChange = (value: string) => {
+    if (!value) {
+      setSelectedDate(null);
+      return;
+    }
+
+    if (!availableDates.includes(value)) {
+      setDateError('No logs available for that date.');
+      return;
+    }
+
+    setDateError(null);
+    setSelectedDate(value);
+  };
+
   return (
     <div className="logs-page">
       <div className="logs-layout">
@@ -54,11 +94,24 @@ export const LogsPage: React.FC = () => {
             <button
               key={app.id}
               className={selectedApp === app.id ? 'tab active' : 'tab'}
-              onClick={() => setSelectedApp(app.id)}
+              onClick={() => handleAppTabClick(app.id)}
             >
               {app.label}
             </button>
           ))}
+
+          <div className="custom-app">
+            <label className="field compact">
+              <span>Custom application</span>
+              <input
+                type="text"
+                placeholder="Enter application id"
+                value={customAppInput}
+                onChange={(e) => handleCustomAppChange(e.target.value)}
+              />
+              <p className="muted helper-text">Fetch logs for any service name.</p>
+            </label>
+          </div>
         </aside>
 
         <div className="logs-content">
@@ -87,27 +140,42 @@ export const LogsPage: React.FC = () => {
               </label>
 
               <label className="field compact">
-                <span>Range</span>
-                <select value={range} onChange={(e) => setRange(e.target.value as TimeRange)}>
-                  {(Object.keys(TIME_RANGE_LABELS) as Array<keyof typeof TIME_RANGE_LABELS>).map(
-                    (key) => (
-                      <option key={key} value={key}>
-                        {TIME_RANGE_LABELS[key as TimeRange]}
-                      </option>
-                    ),
-                  )}
-                </select>
+                <span>Date</span>
+                <input
+                  type="date"
+                  value={selectedDate ?? ''}
+                  list="available-log-dates"
+                  min={availableDates.length ? availableDates[availableDates.length - 1] : undefined}
+                  max={availableDates.length ? availableDates[0] : undefined}
+                  onChange={(e) => handleDateChange(e.target.value)}
+                  disabled={isLoadingDates || availableDates.length === 0}
+                />
+                <datalist id="available-log-dates">
+                  {availableDates.map((date) => (
+                    <option key={date} value={date} />
+                  ))}
+                </datalist>
+                {isLoadingDates && <span className="muted helper-text">Loading available dates…</span>}
+                {datesError && <span className="error helper-text">{datesError}</span>}
+                {dateError && <span className="error helper-text">{dateError}</span>}
+                {!isLoadingDates && !datesError && availableDates.length === 0 && (
+                  <span className="muted helper-text">No log dates available.</span>
+                )}
               </label>
             </div>
           </header>
 
           <section className="log-terminal" aria-live="polite">
+            {datesError && <p className="error">{datesError}</p>}
+            {!selectedDate && !isLoadingDates && (
+              <p className="muted">Select a date to view logs.</p>
+            )}
             {isLoading && <p className="muted">Loading logs…</p>}
             {error && <p className="error">{error}</p>}
-            {!isLoading && !error && sortedEntries.length === 0 && (
+            {!isLoading && !error && selectedDate && sortedEntries.length === 0 && (
               <p className="muted">No log lines for this selection.</p>
             )}
-            {!isLoading && !error && sortedEntries.length > 0 && (
+            {!isLoading && !error && selectedDate && sortedEntries.length > 0 && (
               <div className="log-lines">
                 {sortedEntries.map((entry, index) => (
                   <div className={`log-line level-${entry.level}`} key={`${entry.timestamp}-${index}`}>

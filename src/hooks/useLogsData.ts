@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
 import { createLogsApi, LogEntry, LogLevel } from '../api/logsApi';
-import { TimeRange } from '../dashboardTypes';
 import { useSettings } from '../context/SettingsContext';
 
 interface LogsState {
@@ -12,7 +11,7 @@ interface LogsState {
 export const useLogsData = (
   applicationId: string,
   levels: LogLevel[],
-  range: TimeRange,
+  selectedDate: string | null,
 ): LogsState => {
   const { settings } = useSettings();
   const logsApi = useMemo(
@@ -22,16 +21,34 @@ export const useLogsData = (
 
   const [state, setState] = useState<LogsState>({
     entries: [],
-    isLoading: true,
+    isLoading: false,
     error: null,
   });
 
   useEffect(() => {
     let cancelled = false;
+
+    if (!selectedDate) {
+      setState({ entries: [], isLoading: false, error: null });
+      return () => {
+        cancelled = true;
+      };
+    }
+
+    const dayStart = new Date(selectedDate);
+    dayStart.setHours(0, 0, 0, 0);
+    const dayEnd = new Date(dayStart);
+    dayEnd.setDate(dayEnd.getDate() + 1);
+
     setState((prev) => ({ ...prev, isLoading: true, error: null }));
 
     logsApi
-      .listLogs({ applicationId, levels, range })
+      .listLogs({
+        applicationId,
+        levels,
+        from: dayStart.toISOString(),
+        to: dayEnd.toISOString(),
+      })
       .then((entries) => {
         if (cancelled) return;
         setState({ entries, isLoading: false, error: null });
@@ -44,7 +61,7 @@ export const useLogsData = (
     return () => {
       cancelled = true;
     };
-  }, [applicationId, levels, range, logsApi]);
+  }, [applicationId, levels, selectedDate, logsApi]);
 
   return state;
 };
