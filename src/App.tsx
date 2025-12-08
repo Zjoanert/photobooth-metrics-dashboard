@@ -1,12 +1,13 @@
 import React from 'react';
 import './App.css';
 import { DashboardPage } from './components/DashboardPage';
+import { LogsPage } from './components/LogsPage';
 import { SettingsPage } from './components/SettingsPage';
 import { ApiProvider } from './context/ApiContext';
 import { SettingsProvider, useSettings } from './context/SettingsContext';
 import { HttpEventApi, MockEventApi } from './api/dashboardEventApi';
 
-type ActivePage = 'dashboard' | 'settings';
+type ActivePage = 'dashboard' | 'logs' | 'settings';
 
 const AppShell: React.FC = () => {
   const [page, setPage] = React.useState<ActivePage>('dashboard');
@@ -34,6 +35,9 @@ const AppShell: React.FC = () => {
             >
               Dashboard
             </button>
+            <button className={page === 'logs' ? 'active' : ''} onClick={() => setPage('logs')}>
+              Logs
+            </button>
             <button
               className={page === 'settings' ? 'active' : ''}
               onClick={() => setPage('settings')}
@@ -43,7 +47,9 @@ const AppShell: React.FC = () => {
           </div>
         </header>
 
-        {page === 'dashboard' ? <DashboardPage /> : <SettingsPage />}
+        {page === 'dashboard' && <DashboardPage />}
+        {page === 'logs' && <LogsPage />}
+        {page === 'settings' && <SettingsPage />}
       </div>
     </ApiProvider>
   );
