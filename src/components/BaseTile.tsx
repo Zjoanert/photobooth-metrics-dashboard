@@ -10,6 +10,7 @@ interface BaseTileProps {
   error?: string;
   onLocalTimeRangeChange(mode: TileTimeMode, range?: TimeRange): void;
   onOpenSettings(): void;
+  onDelete?(id: string): void;
   children: React.ReactNode;
 }
 
@@ -21,6 +22,7 @@ export const BaseTile: React.FC<BaseTileProps> = ({
   error,
   onLocalTimeRangeChange,
   onOpenSettings,
+  onDelete,
   children,
 }) => {
   const timeRangeSelector = (
@@ -64,6 +66,15 @@ export const BaseTile: React.FC<BaseTileProps> = ({
         </div>
         <div className="tile-actions">
           {isEditMode && <span className="drag-handle" aria-hidden>⋮⋮</span>}
+          {isEditMode && onDelete && (
+            <button
+              className="icon-button danger"
+              aria-label="Delete tile"
+              onClick={() => onDelete(tile.id)}
+            >
+              🗑️
+            </button>
+          )}
           <button className="icon-button" aria-label="Tile settings" onClick={onOpenSettings}>
             ⚙️
           </button>

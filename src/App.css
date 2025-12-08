@@ -194,6 +194,10 @@ button.secondary {
   box-shadow: none;
 }
 
+.icon-button.danger {
+  color: var(--danger);
+}
+
 .tile-body {
   flex: 1;
   display: flex;
