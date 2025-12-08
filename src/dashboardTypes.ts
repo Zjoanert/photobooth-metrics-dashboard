@@ -23,6 +23,8 @@ export interface TileConfig {
   label: string;
   presetKey?: PresetKey;
   endpointKey: string;
+  applicationName?: string;
+  eventName?: string;
   kpiStat?: KpiStat;
   timeMode: TileTimeMode;
   overrideTimeRange?: TimeRange;

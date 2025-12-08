@@ -15,6 +15,8 @@ const presetOptions: {
   label: string;
   endpointKey: string;
   type: TileType;
+  applicationName: string;
+  eventName: string;
   defaultStat?: KpiStat;
 }[] = [
   {
@@ -22,6 +24,8 @@ const presetOptions: {
     label: 'Total photos',
     endpointKey: 'totalPhotos',
     type: 'kpi',
+    applicationName: 'frontend',
+    eventName: 'totalPhotos',
     defaultStat: 'sum',
   },
   {
@@ -29,6 +33,8 @@ const presetOptions: {
     label: 'Avg. photo duration',
     endpointKey: 'avgPhotoDuration',
     type: 'kpi',
+    applicationName: 'frontend',
+    eventName: 'avgPhotoDuration',
     defaultStat: 'average',
   },
   {
@@ -36,6 +42,8 @@ const presetOptions: {
     label: 'Avg. upload duration',
     endpointKey: 'avgUploadDuration',
     type: 'kpi',
+    applicationName: 'frontend',
+    eventName: 'avgUploadDuration',
     defaultStat: 'average',
   },
   {
@@ -43,6 +51,8 @@ const presetOptions: {
     label: 'Total prints',
     endpointKey: 'totalPrints',
     type: 'kpi',
+    applicationName: 'print',
+    eventName: 'totalPrints',
     defaultStat: 'sum',
   },
   {
@@ -50,6 +60,8 @@ const presetOptions: {
     label: 'Upload speed',
     endpointKey: 'uploadSpeed',
     type: 'chart',
+    applicationName: 'frontend',
+    eventName: 'uploadSpeed',
   },
 ];
 
@@ -80,6 +92,8 @@ export const TileSettingsDialog: React.FC<TileSettingsDialogProps> = ({
       presetKey: preset.key,
       endpointKey: preset.endpointKey,
       type: preset.type,
+      applicationName: preset.applicationName,
+      eventName: preset.eventName,
       kpiStat: preset.defaultStat ?? prev.kpiStat,
     }));
   };
@@ -139,13 +153,50 @@ export const TileSettingsDialog: React.FC<TileSettingsDialogProps> = ({
               Custom endpoint
             </label>
             {!usePreset && (
-              <input
-                type="text"
-                value={draft.endpointKey}
-                onChange={(e) =>
-                  setDraft({ ...draft, endpointKey: e.target.value, presetKey: undefined })
-                }
-              />
+              <div className="field grid">
+                <label>
+                  <span>Endpoint key</span>
+                  <input
+                    type="text"
+                    value={draft.endpointKey}
+                    onChange={(e) =>
+                      setDraft({
+                        ...draft,
+                        endpointKey: e.target.value,
+                        presetKey: undefined,
+                      })
+                    }
+                  />
+                </label>
+                <label>
+                  <span>Application</span>
+                  <input
+                    type="text"
+                    value={draft.applicationName ?? ''}
+                    onChange={(e) =>
+                      setDraft({
+                        ...draft,
+                        applicationName: e.target.value,
+                        presetKey: undefined,
+                      })
+                    }
+                  />
+                </label>
+                <label>
+                  <span>Event</span>
+                  <input
+                    type="text"
+                    value={draft.eventName ?? ''}
+                    onChange={(e) =>
+                      setDraft({
+                        ...draft,
+                        eventName: e.target.value,
+                        presetKey: undefined,
+                      })
+                    }
+                  />
+                </label>
+              </div>
             )}
           </fieldset>
 

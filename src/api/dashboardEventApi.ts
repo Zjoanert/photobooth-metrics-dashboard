@@ -11,10 +11,14 @@ export interface EventApi {
     endpointKey: string,
     range: TimeRange,
     stat?: KpiStat,
+    applicationName?: string,
+    eventName?: string,
   ): Promise<KpiResult>;
   getSeriesByEndpoint(
     endpointKey: string,
     range: TimeRange,
+    applicationName?: string,
+    eventName?: string,
   ): Promise<TimeSeriesPoint[]>;
 }
 
@@ -28,10 +32,13 @@ const buildQuery = (params: Record<string, string | number | undefined>) => {
   return normalized ? `?${normalized}` : '';
 };
 
-const ENDPOINT_MAP: Record<
-  string,
-  { applicationName: string; eventName: string; defaultStat: KpiStat }
-> = {
+interface EndpointConfig {
+  applicationName: string;
+  eventName: string;
+  defaultStat: KpiStat;
+}
+
+const ENDPOINT_MAP: Record<string, EndpointConfig> = {
   totalPhotos: { applicationName: 'frontend', eventName: 'totalPhotos', defaultStat: 'sum' },
   avgPhotoDuration: {
     applicationName: 'frontend',
@@ -49,6 +56,23 @@ const ENDPOINT_MAP: Record<
     defaultStat: 'average',
   },
   totalPrints: { applicationName: 'print', eventName: 'totalPrints', defaultStat: 'sum' },
+};
+
+const resolveEndpointConfig = (
+  endpointKey: string,
+  applicationName?: string,
+  eventName?: string,
+): EndpointConfig => {
+  const presetConfig = ENDPOINT_MAP[endpointKey];
+  if (presetConfig) {
+    return presetConfig;
+  }
+
+  if (applicationName && eventName) {
+    return { applicationName, eventName, defaultStat: 'count' };
+  }
+
+  throw new Error(`Unknown endpoint key: ${endpointKey}`);
 };
 
 export const getDefaultKpiStatForEndpoint = (endpointKey: string): KpiStat => {
@@ -85,11 +109,10 @@ export class HttpEventApi implements EventApi {
   private async fetchEvents(
     endpointKey: string,
     range: TimeRange,
+    applicationName?: string,
+    eventName?: string,
   ): Promise<Event[]> {
-    const config = ENDPOINT_MAP[endpointKey];
-    if (!config) {
-      throw new Error(`Unknown endpoint key: ${endpointKey}`);
-    }
+    const config = resolveEndpointConfig(endpointKey, applicationName, eventName);
 
     const from = getRangeStart(range);
     const query = buildQuery({
@@ -108,11 +131,10 @@ export class HttpEventApi implements EventApi {
   private async fetchStats(
     endpointKey: string,
     range: TimeRange,
+    applicationName?: string,
+    eventName?: string,
   ): Promise<EventStats> {
-    const config = ENDPOINT_MAP[endpointKey];
-    if (!config) {
-      throw new Error(`Unknown endpoint key: ${endpointKey}`);
-    }
+    const config = resolveEndpointConfig(endpointKey, applicationName, eventName);
 
     const from = getRangeStart(range);
     const query = buildQuery({
@@ -148,13 +170,12 @@ export class HttpEventApi implements EventApi {
     endpointKey: string,
     range: TimeRange,
     stat?: KpiStat,
+    applicationName?: string,
+    eventName?: string,
   ): Promise<KpiResult> {
-    const config = ENDPOINT_MAP[endpointKey];
-    if (!config) {
-      throw new Error(`Unknown KPI endpoint: ${endpointKey}`);
-    }
+    const config = resolveEndpointConfig(endpointKey, applicationName, eventName);
 
-    const stats = await this.fetchStats(endpointKey, range);
+    const stats = await this.fetchStats(endpointKey, range, applicationName, eventName);
     const selectedStat = stat ?? config.defaultStat;
     const rawValue = stats[selectedStat];
     const value = rawValue ?? 0;
@@ -165,8 +186,10 @@ export class HttpEventApi implements EventApi {
   async getSeriesByEndpoint(
     endpointKey: string,
     range: TimeRange,
+    applicationName?: string,
+    eventName?: string,
   ): Promise<TimeSeriesPoint[]> {
-    const events = await this.fetchEvents(endpointKey, range);
+    const events = await this.fetchEvents(endpointKey, range, applicationName, eventName);
     return events
       .map((event) => ({ timestamp: event.timestamp, value: event.value }))
       .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
@@ -233,6 +256,8 @@ export class MockEventApi implements EventApi {
     endpointKey: string,
     range: TimeRange,
     stat?: KpiStat,
+    _applicationName?: string,
+    _eventName?: string,
   ): Promise<KpiResult> {
     switch (endpointKey) {
       case 'totalPhotos':
@@ -269,6 +294,8 @@ export class MockEventApi implements EventApi {
   async getSeriesByEndpoint(
     endpointKey: string,
     range: TimeRange,
+    _applicationName?: string,
+    _eventName?: string,
   ): Promise<TimeSeriesPoint[]> {
     switch (endpointKey) {
       case 'uploadSpeed':
