@@ -395,3 +395,167 @@ button.secondary {
   color: var(--success);
   font-weight: 700;
 }
+
+.logs-page {
+  padding: 24px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.logs-layout {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  gap: 16px;
+}
+
+.logs-app-tabs {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px;
+  box-shadow: var(--shadow);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  height: fit-content;
+}
+
+.logs-app-tabs .tab {
+  width: 100%;
+  text-align: left;
+  background: var(--muted-surface);
+  border: 1px solid transparent;
+}
+
+.logs-app-tabs .tab.active {
+  background: var(--primary);
+  color: white;
+  border-color: var(--primary);
+}
+
+.logs-content {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 16px;
+  box-shadow: var(--shadow);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.logs-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.logs-filters {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.field.compact {
+  margin: 0;
+  gap: 6px;
+}
+
+.level-options {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.chip {
+  background: var(--muted-surface);
+  border-radius: 12px;
+  padding: 6px 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
+  box-shadow: var(--shadow);
+}
+
+.log-terminal {
+  background: #0b1524;
+  color: #e5e7eb;
+  border-radius: 12px;
+  border: 1px solid #1f2a3d;
+  padding: 12px;
+  min-height: 260px;
+  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+  overflow: auto;
+}
+
+.log-lines {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.log-line {
+  display: grid;
+  grid-template-columns: 170px 80px 1fr;
+  gap: 8px;
+  align-items: center;
+  padding: 6px 8px;
+  border-radius: 8px;
+}
+
+.log-line:nth-child(odd) {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.log-time {
+  color: #9ca3af;
+  font-size: 12px;
+}
+
+.log-level {
+  font-weight: 700;
+}
+
+.log-message {
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.level-error .log-level {
+  color: #f87171;
+}
+
+.level-warn .log-level {
+  color: #facc15;
+}
+
+.level-info .log-level {
+  color: #38bdf8;
+}
+
+.level-debug .log-level {
+  color: #a78bfa;
+}
+
+@media (max-width: 960px) {
+  .logs-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .logs-app-tabs {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+
+  .logs-app-tabs .tab {
+    flex: 1;
+    text-align: center;
+  }
+
+  .log-line {
+    grid-template-columns: 1fr;
+  }
+}
