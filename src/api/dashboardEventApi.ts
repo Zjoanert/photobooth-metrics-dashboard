@@ -74,11 +74,11 @@ export class HttpEventApi implements EventApi {
       throw new Error(`Unknown endpoint key: ${endpointKey}`);
     }
 
-    const start = getRangeStart(range);
+    const from = getRangeStart(range);
     const query = buildQuery({
       applicationName: config.applicationName,
       eventName: config.eventName,
-      start,
+      from,
     });
 
     const response = await fetch(`${this.baseUrl}/events${query}`);
