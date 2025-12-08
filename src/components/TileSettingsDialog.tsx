@@ -98,6 +98,22 @@ export const TileSettingsDialog: React.FC<TileSettingsDialogProps> = ({
     }));
   };
 
+  const handleCustomEndpointSelect = () => {
+    const preset = draft.presetKey
+      ? presetOptions.find((p) => p.key === draft.presetKey)
+      : undefined;
+
+    setUsePreset(false);
+    setDraft((prev) => ({
+      ...prev,
+      presetKey: undefined,
+      applicationName: prev.applicationName ?? preset?.applicationName ?? '',
+      eventName: prev.eventName ?? preset?.eventName ?? '',
+      endpointKey:
+        prev.endpointKey || preset?.endpointKey || prev.eventName || 'custom',
+    }));
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onSave(draft);
@@ -148,26 +164,12 @@ export const TileSettingsDialog: React.FC<TileSettingsDialogProps> = ({
               <input
                 type="radio"
                 checked={!usePreset}
-                onChange={() => setUsePreset(false)}
+                onChange={handleCustomEndpointSelect}
               />
               Custom endpoint
             </label>
             {!usePreset && (
               <div className="field grid">
-                <label>
-                  <span>Endpoint key</span>
-                  <input
-                    type="text"
-                    value={draft.endpointKey}
-                    onChange={(e) =>
-                      setDraft({
-                        ...draft,
-                        endpointKey: e.target.value,
-                        presetKey: undefined,
-                      })
-                    }
-                  />
-                </label>
                 <label>
                   <span>Application</span>
                   <input
@@ -177,6 +179,7 @@ export const TileSettingsDialog: React.FC<TileSettingsDialogProps> = ({
                       setDraft({
                         ...draft,
                         applicationName: e.target.value,
+                        endpointKey: draft.endpointKey || draft.eventName || 'custom',
                         presetKey: undefined,
                       })
                     }
@@ -191,6 +194,7 @@ export const TileSettingsDialog: React.FC<TileSettingsDialogProps> = ({
                       setDraft({
                         ...draft,
                         eventName: e.target.value,
+                        endpointKey: e.target.value || draft.endpointKey || 'custom',
                         presetKey: undefined,
                       })
                     }
@@ -201,13 +205,13 @@ export const TileSettingsDialog: React.FC<TileSettingsDialogProps> = ({
           </fieldset>
 
           <label className="field">
-            <span>Tile type</span>
+            <span>Endpoint type</span>
             <select
               value={draft.type}
               onChange={(e) => setDraft({ ...draft, type: e.target.value as TileType })}
             >
-              <option value="kpi">KPI</option>
-              <option value="chart">Chart</option>
+              <option value="kpi">Stats</option>
+              <option value="chart">Time series</option>
             </select>
           </label>
 
