@@ -10,6 +10,7 @@ interface TileGridProps {
   globalTimeRange: TimeRange;
   onTilesReorder(next: TileConfig[]): void;
   onTileChange(id: string, patch: Partial<TileConfig>): void;
+  onTileDelete(id: string): void;
 }
 
 export const TileGrid: React.FC<TileGridProps> = ({
@@ -18,12 +19,20 @@ export const TileGrid: React.FC<TileGridProps> = ({
   globalTimeRange,
   onTilesReorder,
   onTileChange,
+  onTileDelete,
 }) => {
   const [activeTile, setActiveTile] = React.useState<TileConfig | null>(null);
 
   const handleSaveTile = (nextTile: TileConfig) => {
     onTileChange(nextTile.id, nextTile);
     setActiveTile(null);
+  };
+
+  const handleDeleteTile = (id: string) => {
+    if (activeTile?.id === id) {
+      setActiveTile(null);
+    }
+    onTileDelete(id);
   };
 
   return (
@@ -35,6 +44,7 @@ export const TileGrid: React.FC<TileGridProps> = ({
           isEditMode,
           onUpdateTile: onTileChange,
           onOpenSettings: setActiveTile,
+          onDelete: handleDeleteTile,
         };
 
         return tile.type === 'kpi' ? (

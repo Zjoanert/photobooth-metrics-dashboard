@@ -162,6 +162,10 @@ export const DashboardPage: React.FC = () => {
     setTiles((prev) => [...prev, newTile]);
   };
 
+  const handleDeleteTile = (id: string) => {
+    setTiles((prev) => prev.filter((tile) => tile.id !== id));
+  };
+
   return (
     <div className="dashboard-page">
       <DashboardHeader
@@ -184,6 +188,7 @@ export const DashboardPage: React.FC = () => {
         globalTimeRange={globalTimeRange}
         onTilesReorder={setTiles}
         onTileChange={handleTileChange}
+        onTileDelete={handleDeleteTile}
       />
       {activePreset && (
         <p className="preset-hint">Preset: {activePreset.name}</p>

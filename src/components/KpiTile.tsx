@@ -9,6 +9,7 @@ interface KpiTileProps {
   isEditMode: boolean;
   onUpdateTile(id: string, patch: Partial<TileConfig>): void;
   onOpenSettings(tile: TileConfig): void;
+  onDelete?(id: string): void;
 }
 
 export const KpiTile: React.FC<KpiTileProps> = ({
@@ -17,6 +18,7 @@ export const KpiTile: React.FC<KpiTileProps> = ({
   isEditMode,
   onUpdateTile,
   onOpenSettings,
+  onDelete,
 }) => {
   const { isLoading, error, kpi } = useTileData(tile, globalTimeRange);
   const decimals = tile.decimals ?? 0;
@@ -36,6 +38,7 @@ export const KpiTile: React.FC<KpiTileProps> = ({
         })
       }
       onOpenSettings={() => onOpenSettings(tile)}
+      onDelete={onDelete}
     >
       <div className="kpi">
         <div className="kpi-value">

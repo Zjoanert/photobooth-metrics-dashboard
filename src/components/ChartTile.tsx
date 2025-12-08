@@ -9,6 +9,7 @@ interface ChartTileProps {
   isEditMode: boolean;
   onUpdateTile(id: string, patch: Partial<TileConfig>): void;
   onOpenSettings(tile: TileConfig): void;
+  onDelete?(id: string): void;
 }
 
 const buildPath = (values: number[], width: number, height: number): string => {
@@ -32,6 +33,7 @@ export const ChartTile: React.FC<ChartTileProps> = ({
   isEditMode,
   onUpdateTile,
   onOpenSettings,
+  onDelete,
 }) => {
   const { isLoading, error, series } = useTileData(tile, globalTimeRange);
   const values = useMemo(() => series?.map((p) => p.value) ?? [], [series]);
@@ -48,6 +50,7 @@ export const ChartTile: React.FC<ChartTileProps> = ({
         onUpdateTile(tile.id, { timeMode: mode, overrideTimeRange: range })
       }
       onOpenSettings={() => onOpenSettings(tile)}
+      onDelete={onDelete}
     >
       <div className="chart-wrapper">
         <svg viewBox="0 0 300 150" className="mini-chart" aria-label="Upload speed chart">
