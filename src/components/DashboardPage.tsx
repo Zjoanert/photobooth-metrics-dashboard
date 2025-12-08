@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   DashboardPreset,
   TileConfig,
@@ -71,15 +71,65 @@ const createInitialPresets = (): DashboardPreset[] => {
   ];
 };
 
+const STORAGE_KEY = 'dashboardState';
+
+interface PersistedDashboardState {
+  tiles: TileConfig[];
+  activePresetId: string;
+  globalTimeRange: TimeRange;
+}
+
+const readDashboardState = (): PersistedDashboardState | null => {
+  if (typeof window === 'undefined') return null;
+
+  try {
+    const raw = window.localStorage.getItem(STORAGE_KEY);
+    if (!raw) return null;
+
+    const parsed = JSON.parse(raw) as Partial<PersistedDashboardState>;
+    return {
+      tiles: parsed.tiles ?? [],
+      activePresetId: parsed.activePresetId || 'default',
+      globalTimeRange: parsed.globalTimeRange ?? TimeRange.Today,
+    };
+  } catch (error) {
+    console.warn('Failed to read dashboard state, falling back to defaults', error);
+    return null;
+  }
+};
+
 export const DashboardPage: React.FC = () => {
-  const [globalTimeRange, setGlobalTimeRange] = useState<TimeRange>(TimeRange.Today);
+  const presets = useMemo(() => createInitialPresets(), []);
+  const savedState = useMemo(() => readDashboardState(), []);
+
+  const [globalTimeRange, setGlobalTimeRange] = useState<TimeRange>(
+    savedState?.globalTimeRange ?? TimeRange.Today,
+  );
   const [isEditMode, setIsEditMode] = useState(false);
-  const [presets] = useState<DashboardPreset[]>(() => createInitialPresets());
-  const [activePresetId, setActivePresetId] = useState('default');
+  const [activePresetId, setActivePresetId] = useState(
+    savedState?.activePresetId ?? 'default',
+  );
   const [tiles, setTiles] = useState<TileConfig[]>(() => {
-    const preset = createInitialPresets().find((p) => p.id === 'default');
+    const presetId = savedState?.activePresetId ?? 'default';
+    const preset = presets.find((p) => p.id === presetId) ?? presets[0];
+
+    if (savedState?.tiles) {
+      return savedState.tiles;
+    }
+
     return preset?.tiles ?? [];
   });
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const payload: PersistedDashboardState = {
+      tiles,
+      activePresetId,
+      globalTimeRange,
+    };
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+  }, [tiles, activePresetId, globalTimeRange]);
 
   const activePreset = useMemo(
     () => presets.find((p) => p.id === activePresetId) ?? presets[0],
