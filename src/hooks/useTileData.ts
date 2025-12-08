@@ -31,12 +31,16 @@ export function useTileData(
             tile.endpointKey,
             effectiveRange,
             tile.kpiStat,
+            tile.applicationName,
+            tile.eventName,
           );
           if (!cancelled) setState({ isLoading: false, kpi });
         } else {
           const series = await eventApi.getSeriesByEndpoint(
             tile.endpointKey,
             effectiveRange,
+            tile.applicationName,
+            tile.eventName,
           );
           if (!cancelled) setState({ isLoading: false, series });
         }
@@ -53,7 +57,15 @@ export function useTileData(
     return () => {
       cancelled = true;
     };
-  }, [tile.type, tile.endpointKey, tile.kpiStat, effectiveRange, eventApi]);
+  }, [
+    tile.type,
+    tile.endpointKey,
+    tile.kpiStat,
+    tile.applicationName,
+    tile.eventName,
+    effectiveRange,
+    eventApi,
+  ]);
 
   return state;
 }
