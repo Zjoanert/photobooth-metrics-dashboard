@@ -12,6 +12,9 @@ interface ChartTileProps {
   onDelete?(id: string): void;
 }
 
+const CHART_WIDTH = 300;
+const CHART_HEIGHT = 150;
+
 const buildPath = (values: number[], width: number, height: number): string => {
   if (values.length === 0) return '';
   const max = Math.max(...values);
@@ -37,7 +40,7 @@ export const ChartTile: React.FC<ChartTileProps> = ({
 }) => {
   const { isLoading, error, series } = useTileData(tile, globalTimeRange);
   const values = useMemo(() => series?.map((p) => p.value) ?? [], [series]);
-  const path = useMemo(() => buildPath(values, 280, 120), [values]);
+  const path = useMemo(() => buildPath(values, CHART_WIDTH, CHART_HEIGHT), [values]);
   const yDomain = useMemo(() => {
     if (!values.length) return undefined;
     const max = Math.max(...values);
@@ -82,11 +85,15 @@ export const ChartTile: React.FC<ChartTileProps> = ({
               <span key={tick} className="chart-grid-line" />
             ))}
           </div>
-          <svg viewBox="0 0 300 150" className="mini-chart" aria-label="Upload speed chart">
+          <svg
+            viewBox={`0 0 ${CHART_WIDTH} ${CHART_HEIGHT}`}
+            className="mini-chart"
+            aria-label="Upload speed chart"
+          >
             <path d={path} fill="none" stroke="var(--primary)" strokeWidth="3" />
             {path && (
               <path
-                d={`${path} L 300 150 L 0 150 Z`}
+                d={`${path} L ${CHART_WIDTH} ${CHART_HEIGHT} L 0 ${CHART_HEIGHT} Z`}
                 fill="var(--primary-fade)"
                 stroke="none"
                 opacity={0.3}
