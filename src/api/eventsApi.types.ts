@@ -16,8 +16,8 @@ export interface EventInput {
 export interface ListEventsParams {
   applicationName?: string;
   eventName?: string;
-  start?: string;
-  end?: string;
+  from?: string;
+  to?: string;
   limit?: number;
   offset?: number;
 }
@@ -25,8 +25,8 @@ export interface ListEventsParams {
 export interface EventStatsParams {
   applicationName?: string;
   eventName?: string;
-  start?: string;
-  end?: string;
+  from?: string;
+  to?: string;
 }
 
 export interface EventStats {

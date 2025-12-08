@@ -44,8 +44,8 @@ const listEvents = async (params: ListEventsParams = {}): Promise<Event[]> => {
   const query = buildQueryString({
     applicationName: params.applicationName,
     eventName: params.eventName,
-    start: params.start,
-    end: params.end,
+    from: params.from,
+    to: params.to,
     limit: params.limit,
     offset: params.offset,
   });
@@ -63,8 +63,8 @@ const getEventStats = async (params: EventStatsParams = {}): Promise<EventStats>
   const query = buildQueryString({
     applicationName: params.applicationName,
     eventName: params.eventName,
-    start: params.start,
-    end: params.end,
+    from: params.from,
+    to: params.to,
   });
 
   const response = await fetch(`${BASE_URL}/events/stats${query}`);
