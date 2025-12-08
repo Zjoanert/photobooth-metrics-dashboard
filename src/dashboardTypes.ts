@@ -8,6 +8,8 @@ export type TileTimeMode = 'global' | 'override';
 
 export type TileType = 'kpi' | 'chart';
 
+export type KpiStat = 'count' | 'sum' | 'average' | 'min' | 'max';
+
 export type PresetKey =
   | 'totalPhotos'
   | 'avgPhotoDuration'
@@ -21,6 +23,7 @@ export interface TileConfig {
   label: string;
   presetKey?: PresetKey;
   endpointKey: string;
+  kpiStat?: KpiStat;
   timeMode: TileTimeMode;
   overrideTimeRange?: TimeRange;
   unit?: string;

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { PresetKey, TileConfig, TileType, TimeRange } from '../dashboardTypes';
+import { KpiStat, PresetKey, TileConfig, TileType, TimeRange } from '../dashboardTypes';
+import { getDefaultKpiStatForEndpoint } from '../api/dashboardEventApi';
 import { TIME_RANGE_LABELS } from '../utils/timeRange';
 
 interface TileSettingsDialogProps {
@@ -9,25 +10,40 @@ interface TileSettingsDialogProps {
   onSave(nextTile: TileConfig): void;
 }
 
-const presetOptions: { key: PresetKey; label: string; endpointKey: string; type: TileType }[] = [
-  { key: 'totalPhotos', label: 'Total photos', endpointKey: 'totalPhotos', type: 'kpi' },
+const presetOptions: {
+  key: PresetKey;
+  label: string;
+  endpointKey: string;
+  type: TileType;
+  defaultStat?: KpiStat;
+}[] = [
+  {
+    key: 'totalPhotos',
+    label: 'Total photos',
+    endpointKey: 'totalPhotos',
+    type: 'kpi',
+    defaultStat: 'sum',
+  },
   {
     key: 'avgPhotoDuration',
     label: 'Avg. photo duration',
     endpointKey: 'avgPhotoDuration',
     type: 'kpi',
+    defaultStat: 'average',
   },
   {
     key: 'avgUploadDuration',
     label: 'Avg. upload duration',
     endpointKey: 'avgUploadDuration',
     type: 'kpi',
+    defaultStat: 'average',
   },
   {
     key: 'totalPrints',
     label: 'Total prints',
     endpointKey: 'totalPrints',
     type: 'kpi',
+    defaultStat: 'sum',
   },
   {
     key: 'uploadSpeed',
@@ -37,6 +53,14 @@ const presetOptions: { key: PresetKey; label: string; endpointKey: string; type:
   },
 ];
 
+const KPI_STAT_LABELS: Record<KpiStat, string> = {
+  count: 'Count',
+  sum: 'Sum',
+  average: 'Average',
+  min: 'Minimum',
+  max: 'Maximum',
+};
+
 export const TileSettingsDialog: React.FC<TileSettingsDialogProps> = ({
   tile,
   open,
@@ -45,6 +69,8 @@ export const TileSettingsDialog: React.FC<TileSettingsDialogProps> = ({
 }) => {
   const [draft, setDraft] = useState<TileConfig>(tile);
   const [usePreset, setUsePreset] = useState<boolean>(Boolean(tile.presetKey));
+  const selectedKpiStat =
+    draft.kpiStat ?? getDefaultKpiStatForEndpoint(draft.endpointKey);
 
   const handlePresetChange = (key: string) => {
     const preset = presetOptions.find((p) => p.key === key);
@@ -54,6 +80,7 @@ export const TileSettingsDialog: React.FC<TileSettingsDialogProps> = ({
       presetKey: preset.key,
       endpointKey: preset.endpointKey,
       type: preset.type,
+      kpiStat: preset.defaultStat ?? prev.kpiStat,
     }));
   };
 
@@ -132,6 +159,24 @@ export const TileSettingsDialog: React.FC<TileSettingsDialogProps> = ({
               <option value="chart">Chart</option>
             </select>
           </label>
+
+          {draft.type === 'kpi' && (
+            <label className="field">
+              <span>Statistic</span>
+              <select
+                value={selectedKpiStat}
+                onChange={(e) =>
+                  setDraft({ ...draft, kpiStat: e.target.value as KpiStat })
+                }
+              >
+                {Object.entries(KPI_STAT_LABELS).map(([value, label]) => (
+                  <option key={value} value={value}>
+                    {label}
+                  </option>
+                ))}
+              </select>
+            </label>
+          )}
 
           <div className="field grid">
             <label>

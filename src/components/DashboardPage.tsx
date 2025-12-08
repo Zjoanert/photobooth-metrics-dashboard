@@ -1,9 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import {
-  DashboardPreset,
-  TileConfig,
-  TimeRange,
-} from '../dashboardTypes';
+import { DashboardPreset, TileConfig, TimeRange } from '../dashboardTypes';
+import { getDefaultKpiStatForEndpoint } from '../api/dashboardEventApi';
 import { DashboardHeader } from './DashboardHeader';
 import { DashboardToolbar } from './DashboardToolbar';
 import { TileGrid } from './TileGrid';
@@ -16,6 +13,7 @@ const createInitialPresets = (): DashboardPreset[] => {
       label: 'Total photos',
       presetKey: 'totalPhotos',
       endpointKey: 'totalPhotos',
+      kpiStat: getDefaultKpiStatForEndpoint('totalPhotos'),
       timeMode: 'global',
       unit: '',
       decimals: 0,
@@ -26,6 +24,7 @@ const createInitialPresets = (): DashboardPreset[] => {
       label: 'Total prints',
       presetKey: 'totalPrints',
       endpointKey: 'totalPrints',
+      kpiStat: getDefaultKpiStatForEndpoint('totalPrints'),
       timeMode: 'global',
       unit: '',
       decimals: 0,
@@ -36,6 +35,7 @@ const createInitialPresets = (): DashboardPreset[] => {
       label: 'Avg. photo time (s)',
       presetKey: 'avgPhotoDuration',
       endpointKey: 'avgPhotoDuration',
+      kpiStat: getDefaultKpiStatForEndpoint('avgPhotoDuration'),
       timeMode: 'global',
       unit: 's',
       decimals: 1,
@@ -46,6 +46,7 @@ const createInitialPresets = (): DashboardPreset[] => {
       label: 'Avg. upload time (s)',
       presetKey: 'avgUploadDuration',
       endpointKey: 'avgUploadDuration',
+      kpiStat: getDefaultKpiStatForEndpoint('avgUploadDuration'),
       timeMode: 'global',
       unit: 's',
       decimals: 1,
@@ -156,6 +157,7 @@ export const DashboardPage: React.FC = () => {
       type: 'kpi',
       label: 'New tile',
       endpointKey: 'totalPhotos',
+      kpiStat: getDefaultKpiStatForEndpoint('totalPhotos'),
       timeMode: 'global',
       decimals: 0,
     };
