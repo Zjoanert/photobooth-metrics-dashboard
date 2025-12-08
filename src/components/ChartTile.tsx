@@ -38,6 +38,22 @@ export const ChartTile: React.FC<ChartTileProps> = ({
   const { isLoading, error, series } = useTileData(tile, globalTimeRange);
   const values = useMemo(() => series?.map((p) => p.value) ?? [], [series]);
   const path = useMemo(() => buildPath(values, 280, 120), [values]);
+  const yDomain = useMemo(() => {
+    if (!values.length) return undefined;
+    const max = Math.max(...values);
+    const min = Math.min(...values);
+    return { min, max };
+  }, [values]);
+  const yTicks = useMemo(() => {
+    if (!yDomain) return [];
+    if (yDomain.min === yDomain.max) return [yDomain.max];
+
+    const steps = 3;
+    const step = (yDomain.max - yDomain.min) / (steps - 1);
+    return Array.from({ length: steps }, (_, i) => yDomain.max - step * i);
+  }, [yDomain]);
+
+  const formatTick = (value: number) => value.toFixed(tile.decimals ?? 0);
 
   return (
     <BaseTile
@@ -53,17 +69,31 @@ export const ChartTile: React.FC<ChartTileProps> = ({
       onDelete={onDelete}
     >
       <div className="chart-wrapper">
-        <svg viewBox="0 0 300 150" className="mini-chart" aria-label="Upload speed chart">
-          <path d={path} fill="none" stroke="var(--primary)" strokeWidth="3" />
-          {path && (
-            <path
-              d={`${path} L 300 150 L 0 150 Z`}
-              fill="var(--primary-fade)"
-              stroke="none"
-              opacity={0.3}
-            />
-          )}
-        </svg>
+        <div className="chart-y-axis" aria-hidden={!yTicks.length}>
+          {yTicks.map((tick) => (
+            <span key={tick} className="chart-y-label">
+              {formatTick(tick)}
+            </span>
+          ))}
+        </div>
+        <div className="chart-plot">
+          <div className="chart-grid" aria-hidden={!yTicks.length}>
+            {yTicks.map((tick) => (
+              <span key={tick} className="chart-grid-line" />
+            ))}
+          </div>
+          <svg viewBox="0 0 300 150" className="mini-chart" aria-label="Upload speed chart">
+            <path d={path} fill="none" stroke="var(--primary)" strokeWidth="3" />
+            {path && (
+              <path
+                d={`${path} L 300 150 L 0 150 Z`}
+                fill="var(--primary-fade)"
+                stroke="none"
+                opacity={0.3}
+              />
+            )}
+          </svg>
+        </div>
       </div>
     </BaseTile>
   );
