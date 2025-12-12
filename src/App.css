@@ -181,6 +181,15 @@ button.secondary {
   grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
 }
 
+.tile-wrapper {
+  width: 100%;
+}
+
+.tile-wrapper.dragging {
+  opacity: 0.7;
+  cursor: grabbing;
+}
+
 .tile {
   background: var(--panel);
   border: 1px solid var(--border);
