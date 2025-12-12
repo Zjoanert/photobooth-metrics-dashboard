@@ -117,7 +117,6 @@ export class HttpEventApi implements EventApi {
     range: TimeRange,
     applicationName?: string,
     eventName?: string,
-    limit?: number,
   ): Promise<Event[]> {
     const config = resolveEndpointConfig(endpointKey, applicationName, eventName);
 
@@ -126,7 +125,6 @@ export class HttpEventApi implements EventApi {
       applicationName: config.applicationName,
       eventName: config.eventName,
       from,
-      limit,
     });
 
     const response = await fetch(`${this.baseUrl}/events${query}`);
