@@ -25,6 +25,7 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
           <label htmlFor="preset">Preset:</label>
           <select
             id="preset"
+            className="select-control compact"
             value={activePresetId}
             onChange={(e) => onPresetChange(e.target.value)}
           >
