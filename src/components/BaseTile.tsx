@@ -28,6 +28,7 @@ export const BaseTile: React.FC<BaseTileProps> = ({
   const timeRangeSelector = (
     <div className="tile-time-controls">
       <select
+        className="select-control compact"
         value={tile.timeMode}
         onChange={(e) =>
           onLocalTimeRangeChange(e.target.value as TileTimeMode, tile.overrideTimeRange)
@@ -38,6 +39,7 @@ export const BaseTile: React.FC<BaseTileProps> = ({
       </select>
       {tile.timeMode === 'override' && (
         <select
+          className="select-control compact"
           value={tile.overrideTimeRange}
           onChange={(e) =>
             onLocalTimeRangeChange(

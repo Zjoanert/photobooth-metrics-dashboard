@@ -149,6 +149,7 @@ export const TileSettingsDialog: React.FC<TileSettingsDialogProps> = ({
             </label>
             {usePreset && (
               <select
+                className="select-control"
                 value={draft.presetKey ?? ''}
                 onChange={(e) => handlePresetChange(e.target.value)}
               >
@@ -207,6 +208,7 @@ export const TileSettingsDialog: React.FC<TileSettingsDialogProps> = ({
           <label className="field">
             <span>Endpoint type</span>
             <select
+              className="select-control"
               value={draft.type}
               onChange={(e) => setDraft({ ...draft, type: e.target.value as TileType })}
             >
@@ -220,6 +222,7 @@ export const TileSettingsDialog: React.FC<TileSettingsDialogProps> = ({
             <label className="field">
               <span>Statistic</span>
               <select
+                className="select-control"
                 value={selectedKpiStat}
                 onChange={(e) =>
                   setDraft({ ...draft, kpiStat: e.target.value as KpiStat })
@@ -282,6 +285,7 @@ export const TileSettingsDialog: React.FC<TileSettingsDialogProps> = ({
               </label>
               {draft.timeMode === 'override' && (
                 <select
+                  className="select-control compact"
                   value={draft.overrideTimeRange}
                   onChange={(e) =>
                     setDraft({
