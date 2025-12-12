@@ -3,6 +3,7 @@ import { TileConfig, TimeRange } from '../dashboardTypes';
 import { KpiTile } from './KpiTile';
 import { ChartTile } from './ChartTile';
 import { TileSettingsDialog } from './TileSettingsDialog';
+import { RecencyTile } from './RecencyTile';
 
 interface TileGridProps {
   tiles: TileConfig[];
@@ -47,11 +48,16 @@ export const TileGrid: React.FC<TileGridProps> = ({
           onDelete: handleDeleteTile,
         };
 
-        return tile.type === 'kpi' ? (
-          <KpiTile key={tile.id} {...common} />
-        ) : (
-          <ChartTile key={tile.id} {...common} />
-        );
+        switch (tile.type) {
+          case 'kpi':
+            return <KpiTile key={tile.id} {...common} />;
+          case 'chart':
+            return <ChartTile key={tile.id} {...common} />;
+          case 'recency':
+            return <RecencyTile key={tile.id} {...common} />;
+          default:
+            return null;
+        }
       })}
       {activeTile && (
         <TileSettingsDialog

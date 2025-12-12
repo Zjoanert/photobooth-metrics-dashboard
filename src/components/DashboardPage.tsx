@@ -52,6 +52,14 @@ const createInitialPresets = (): DashboardPreset[] => {
       decimals: 1,
     },
     {
+      id: 'last-photo-age',
+      type: 'recency',
+      label: 'Time since last photo',
+      presetKey: 'totalPhotos',
+      endpointKey: 'totalPhotos',
+      timeMode: 'global',
+    },
+    {
       id: 'upload-speed',
       type: 'chart',
       label: 'Upload speed (MB/s)',

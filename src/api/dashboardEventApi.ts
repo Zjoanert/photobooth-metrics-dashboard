@@ -20,6 +20,12 @@ export interface EventApi {
     applicationName?: string,
     eventName?: string,
   ): Promise<TimeSeriesPoint[]>;
+  getLatestEventTime(
+    endpointKey: string,
+    range: TimeRange,
+    applicationName?: string,
+    eventName?: string,
+  ): Promise<string | null>;
 }
 
 const buildQuery = (params: Record<string, string | number | undefined>) => {
@@ -194,6 +200,26 @@ export class HttpEventApi implements EventApi {
       .map((event) => ({ timestamp: event.timestamp, value: event.value }))
       .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
   }
+
+  async getLatestEventTime(
+    endpointKey: string,
+    range: TimeRange,
+    applicationName?: string,
+    eventName?: string,
+  ): Promise<string | null> {
+    const events = await this.fetchEvents(endpointKey, range, applicationName, eventName);
+    if (!events.length) return null;
+
+    const latest = events.reduce<{ timestamp: string; timeMs: number } | null>((current, event) => {
+      const timeMs = new Date(event.timestamp).getTime();
+      if (!current || timeMs > current.timeMs) {
+        return { timestamp: event.timestamp, timeMs };
+      }
+      return current;
+    }, null);
+
+    return latest?.timestamp ?? null;
+  }
 }
 
 export class MockEventApi implements EventApi {
@@ -303,5 +329,17 @@ export class MockEventApi implements EventApi {
       default:
         return this.simulateDelay([]);
     }
+  }
+
+  async getLatestEventTime(
+    _endpointKey: string,
+    _range: TimeRange,
+    _applicationName?: string,
+    _eventName?: string,
+  ): Promise<string | null> {
+    const now = new Date();
+    const offsetMinutes = 5 + Math.round(Math.random() * 55);
+    const latest = new Date(now.getTime() - offsetMinutes * 60 * 1000);
+    return this.simulateDelay(latest.toISOString());
   }
 }
