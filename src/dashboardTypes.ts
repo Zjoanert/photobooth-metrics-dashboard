@@ -6,7 +6,7 @@ export enum TimeRange {
 
 export type TileTimeMode = 'global' | 'override';
 
-export type TileType = 'kpi' | 'chart';
+export type TileType = 'kpi' | 'chart' | 'recency';
 
 export type KpiStat = 'count' | 'sum' | 'average' | 'min' | 'max';
 

@@ -8,6 +8,7 @@ export interface TileDataResult {
   error?: string;
   kpi?: KpiResult;
   series?: TimeSeriesPoint[];
+  latestEventTimestamp?: string | null;
 }
 
 export function useTileData(
@@ -35,7 +36,7 @@ export function useTileData(
             tile.eventName,
           );
           if (!cancelled) setState({ isLoading: false, kpi });
-        } else {
+        } else if (tile.type === 'chart') {
           const series = await eventApi.getSeriesByEndpoint(
             tile.endpointKey,
             effectiveRange,
@@ -43,6 +44,18 @@ export function useTileData(
             tile.eventName,
           );
           if (!cancelled) setState({ isLoading: false, series });
+        } else {
+          const latestEventTimestamp = await eventApi.getLatestEventTime(
+            tile.endpointKey,
+            effectiveRange,
+            tile.applicationName,
+            tile.eventName,
+          );
+          if (!cancelled)
+            setState({
+              isLoading: false,
+              latestEventTimestamp,
+            });
         }
       } catch (e) {
         if (!cancelled)

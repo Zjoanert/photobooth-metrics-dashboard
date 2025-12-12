@@ -234,6 +234,22 @@ button.secondary {
   color: var(--danger);
 }
 
+.elapsed-timer {
+  text-align: left;
+  width: 100%;
+}
+
+.elapsed-time {
+  font-size: 28px;
+  font-weight: 800;
+}
+
+.elapsed-meta {
+  margin-top: 8px;
+  color: var(--muted);
+  font-weight: 600;
+}
+
 .chart-wrapper {
   width: 100%;
   display: flex;

@@ -212,6 +212,7 @@ export const TileSettingsDialog: React.FC<TileSettingsDialogProps> = ({
             >
               <option value="kpi">Stats</option>
               <option value="chart">Time series</option>
+              <option value="recency">Time since last event</option>
             </select>
           </label>
 
