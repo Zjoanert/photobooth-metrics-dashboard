@@ -176,6 +176,22 @@ export const DashboardPage: React.FC = () => {
     setTiles((prev) => prev.filter((tile) => tile.id !== id));
   };
 
+  const handleReorderTiles = (sourceId: string, targetId: string) => {
+    setTiles((prev) => {
+      const next = [...prev];
+      const sourceIndex = next.findIndex((tile) => tile.id === sourceId);
+      const targetIndex = next.findIndex((tile) => tile.id === targetId);
+
+      if (sourceIndex === -1 || targetIndex === -1 || sourceIndex === targetIndex) {
+        return prev;
+      }
+
+      const [moved] = next.splice(sourceIndex, 1);
+      next.splice(targetIndex, 0, moved);
+      return next;
+    });
+  };
+
   return (
     <div className="dashboard-page">
       <DashboardHeader
@@ -196,7 +212,7 @@ export const DashboardPage: React.FC = () => {
         tiles={tiles}
         isEditMode={isEditMode}
         globalTimeRange={globalTimeRange}
-        onTilesReorder={setTiles}
+        onTilesReorder={handleReorderTiles}
         onTileChange={handleTileChange}
         onTileDelete={handleDeleteTile}
       />

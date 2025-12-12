@@ -9,7 +9,7 @@ interface TileGridProps {
   tiles: TileConfig[];
   isEditMode: boolean;
   globalTimeRange: TimeRange;
-  onTilesReorder(next: TileConfig[]): void;
+  onTilesReorder(sourceId: string, targetId: string): void;
   onTileChange(id: string, patch: Partial<TileConfig>): void;
   onTileDelete(id: string): void;
 }
@@ -23,6 +23,7 @@ export const TileGrid: React.FC<TileGridProps> = ({
   onTileDelete,
 }) => {
   const [activeTile, setActiveTile] = React.useState<TileConfig | null>(null);
+  const [draggingId, setDraggingId] = React.useState<string | null>(null);
 
   const handleSaveTile = (nextTile: TileConfig) => {
     onTileChange(nextTile.id, nextTile);
@@ -34,6 +35,38 @@ export const TileGrid: React.FC<TileGridProps> = ({
       setActiveTile(null);
     }
     onTileDelete(id);
+  };
+
+  const handleDragStart = (event: React.DragEvent<HTMLDivElement>, id: string) => {
+    if (!isEditMode) return;
+
+    setDraggingId(id);
+    event.dataTransfer.setData('text/plain', id);
+    event.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleDragOver = (event: React.DragEvent<HTMLDivElement>) => {
+    if (!isEditMode) return;
+
+    event.preventDefault();
+    event.dataTransfer.dropEffect = 'move';
+  };
+
+  const handleDrop = (event: React.DragEvent<HTMLDivElement>, targetId: string) => {
+    if (!isEditMode) return;
+
+    event.preventDefault();
+    const sourceId = event.dataTransfer.getData('text/plain') || draggingId;
+
+    if (sourceId && sourceId !== targetId) {
+      onTilesReorder(sourceId, targetId);
+    }
+
+    setDraggingId(null);
+  };
+
+  const handleDragEnd = () => {
+    setDraggingId(null);
   };
 
   return (
@@ -48,16 +81,32 @@ export const TileGrid: React.FC<TileGridProps> = ({
           onDelete: handleDeleteTile,
         };
 
-        switch (tile.type) {
-          case 'kpi':
-            return <KpiTile key={tile.id} {...common} />;
-          case 'chart':
-            return <ChartTile key={tile.id} {...common} />;
-          case 'recency':
-            return <RecencyTile key={tile.id} {...common} />;
-          default:
-            return null;
-        }
+        const content = (() => {
+          switch (tile.type) {
+            case 'kpi':
+              return <KpiTile {...common} />;
+            case 'chart':
+              return <ChartTile {...common} />;
+            case 'recency':
+              return <RecencyTile {...common} />;
+            default:
+              return null;
+          }
+        })();
+
+        return (
+          <div
+            key={tile.id}
+            className={`tile-wrapper${draggingId === tile.id ? ' dragging' : ''}`}
+            draggable={isEditMode}
+            onDragStart={(event) => handleDragStart(event, tile.id)}
+            onDragOver={handleDragOver}
+            onDrop={(event) => handleDrop(event, tile.id)}
+            onDragEnd={handleDragEnd}
+          >
+            {content}
+          </div>
+        );
       })}
       {activeTile && (
         <TileSettingsDialog
