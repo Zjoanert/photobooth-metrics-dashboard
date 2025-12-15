@@ -1,6 +1,6 @@
 import { EventApi, getDefaultKpiStatForEndpoint } from '../api/dashboardEventApi';
-import { TileConfig, TimeRange } from '../dashboardTypes';
-import { TIME_RANGE_LABELS, getEffectiveTimeRange } from './timeRange';
+import { TileConfig, TimeRangeValue } from '../dashboardTypes';
+import { formatTimeRangeLabel, getEffectiveTimeRange } from './timeRange';
 
 const formatNumber = (value: number, decimals?: number) => value.toFixed(decimals ?? 0);
 
@@ -27,7 +27,7 @@ const formatDuration = (ms: number): string => {
 
 const buildKpiRow = async (
   tile: TileConfig,
-  effectiveRange: TimeRange,
+  effectiveRange: TimeRangeValue,
   timeRangeLabel: string,
   eventApi: EventApi,
 ): Promise<string[]> => {
@@ -53,7 +53,7 @@ const buildKpiRow = async (
 
 const buildChartRows = async (
   tile: TileConfig,
-  effectiveRange: TimeRange,
+  effectiveRange: TimeRangeValue,
   timeRangeLabel: string,
   eventApi: EventApi,
 ): Promise<string[][]> => {
@@ -91,7 +91,7 @@ const buildChartRows = async (
 
 const buildRecencyRow = async (
   tile: TileConfig,
-  effectiveRange: TimeRange,
+  effectiveRange: TimeRangeValue,
   timeRangeLabel: string,
   eventApi: EventApi,
 ): Promise<string[]> => {
@@ -140,9 +140,16 @@ const triggerCsvDownload = (csv: string) => {
   URL.revokeObjectURL(url);
 };
 
+/**
+ * Generates a CSV export for the configured dashboard tiles and triggers a download.
+ *
+ * @param tiles - Visible dashboard tiles to include in the export.
+ * @param globalTimeRange - The global time range selection applied to tiles using the global mode.
+ * @param eventApi - API instance used to fetch tile values.
+ */
 export const downloadDashboardCsv = async (
   tiles: TileConfig[],
-  globalTimeRange: TimeRange,
+  globalTimeRange: TimeRangeValue,
   eventApi: EventApi,
 ): Promise<void> => {
   const rows: string[][] = [
@@ -151,7 +158,7 @@ export const downloadDashboardCsv = async (
 
   for (const tile of tiles) {
     const effectiveRange = getEffectiveTimeRange(tile, globalTimeRange);
-    const timeRangeLabel = TIME_RANGE_LABELS[effectiveRange];
+    const timeRangeLabel = formatTimeRangeLabel(effectiveRange);
 
     try {
       if (tile.type === 'kpi') {

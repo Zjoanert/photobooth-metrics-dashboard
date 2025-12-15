@@ -2,6 +2,7 @@ import React, { useMemo } from 'react';
 import { TileConfig, TimeRangeValue } from '../dashboardTypes';
 import { BaseTile } from './BaseTile';
 import { useTileData } from '../hooks/useTileData';
+import { buildChartPath } from '../utils/chartPath';
 
 interface ChartTileProps {
   tile: TileConfig;
@@ -15,21 +16,9 @@ interface ChartTileProps {
 const CHART_WIDTH = 300;
 const CHART_HEIGHT = 150;
 
-const buildPath = (values: number[], width: number, height: number): string => {
-  if (values.length === 0) return '';
-  const max = Math.max(...values);
-  const min = Math.min(...values);
-  const range = max - min || 1;
-
-  return values
-    .map((value, index) => {
-      const x = (index / (values.length - 1)) * width;
-      const y = height - ((value - min) / range) * height;
-      return `${index === 0 ? 'M' : 'L'} ${x.toFixed(2)} ${y.toFixed(2)}`;
-    })
-    .join(' ');
-};
-
+/**
+ * Visualises series data as a compact line chart tile.
+ */
 export const ChartTile: React.FC<ChartTileProps> = ({
   tile,
   globalTimeRange,
@@ -40,7 +29,10 @@ export const ChartTile: React.FC<ChartTileProps> = ({
 }) => {
   const { isLoading, error, series } = useTileData(tile, globalTimeRange);
   const values = useMemo(() => series?.map((p) => p.value) ?? [], [series]);
-  const path = useMemo(() => buildPath(values, CHART_WIDTH, CHART_HEIGHT), [values]);
+  const path = useMemo(
+    () => buildChartPath(values, CHART_WIDTH, CHART_HEIGHT),
+    [values],
+  );
   const yDomain = useMemo(() => {
     if (!values.length) return undefined;
     const max = Math.max(...values);
