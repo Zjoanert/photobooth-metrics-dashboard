@@ -221,6 +221,29 @@ button.secondary {
   font-size: 14px;
 }
 
+.time-range-picker {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.custom-range-fields {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+
+.custom-range-fields input[type='datetime-local'] {
+  margin-top: 4px;
+  padding: 6px 8px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--panel);
+  color: var(--text);
+}
+
 .tile-actions {
   display: flex;
   gap: 6px;

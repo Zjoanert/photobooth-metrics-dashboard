@@ -1,5 +1,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { TileConfig, TimeSeriesPoint, TimeRange, KpiResult } from '../dashboardTypes';
+import {
+  TileConfig,
+  TimeSeriesPoint,
+  TimeRangeValue,
+  TimeRange
+  KpiResult,
+} from '../dashboardTypes';
 import { useEventApi } from '../context/ApiContext';
 import { resolveEndpointConfig } from '../api/dashboardEventApi';
 import { useSettings } from '../context/SettingsContext';
@@ -15,7 +21,7 @@ export interface TileDataResult {
 
 export function useTileData(
   tile: TileConfig,
-  globalTimeRange: TimeRange,
+  globalTimeRange: TimeRangeValue,
 ): TileDataResult {
   const eventApi = useEventApi();
   const { settings } = useSettings();

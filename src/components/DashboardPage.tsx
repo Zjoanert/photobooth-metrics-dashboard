@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { DashboardPreset, TileConfig, TimeRange } from '../dashboardTypes';
+import { DashboardPreset, TileConfig, TimeRange, TimeRangeValue } from '../dashboardTypes';
 import { getDefaultKpiStatForEndpoint } from '../api/dashboardEventApi';
 import { DashboardHeader } from './DashboardHeader';
 import { DashboardToolbar } from './DashboardToolbar';
@@ -85,7 +85,7 @@ const STORAGE_KEY = 'dashboardState';
 interface PersistedDashboardState {
   tiles: TileConfig[];
   activePresetId: string;
-  globalTimeRange: TimeRange;
+  globalTimeRange: TimeRangeValue;
 }
 
 const readDashboardState = (): PersistedDashboardState | null => {
@@ -111,7 +111,7 @@ export const DashboardPage: React.FC = () => {
   const presets = useMemo(() => createInitialPresets(), []);
   const savedState = useMemo(() => readDashboardState(), []);
 
-  const [globalTimeRange, setGlobalTimeRange] = useState<TimeRange>(
+  const [globalTimeRange, setGlobalTimeRange] = useState<TimeRangeValue>(
     savedState?.globalTimeRange ?? TimeRange.Today,
   );
   const [isEditMode, setIsEditMode] = useState(false);

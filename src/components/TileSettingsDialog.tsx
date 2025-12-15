@@ -1,7 +1,21 @@
 import React, { useState } from 'react';
-import { KpiStat, PresetKey, TileConfig, TileType, TimeRange } from '../dashboardTypes';
+import {
+  KpiStat,
+  PresetKey,
+  TileConfig,
+  TileType,
+  TimeRange,
+  TimeRangeValue,
+} from '../dashboardTypes';
 import { getDefaultKpiStatForEndpoint } from '../api/dashboardEventApi';
-import { TIME_RANGE_LABELS } from '../utils/timeRange';
+import {
+  TIME_RANGE_LABELS,
+  createDefaultCustomRange,
+  ensureValidCustomRange,
+  fromInputDateTimeValue,
+  isCustomRange,
+  toInputDateTimeValue,
+} from '../utils/timeRange';
 
 interface TileSettingsDialogProps {
   tile: TileConfig;
@@ -278,28 +292,83 @@ export const TileSettingsDialog: React.FC<TileSettingsDialogProps> = ({
                   type="radio"
                   checked={draft.timeMode === 'override'}
                   onChange={() =>
-                    setDraft({ ...draft, timeMode: 'override', overrideTimeRange: TimeRange.Today })
+                    setDraft({
+                      ...draft,
+                      timeMode: 'override',
+                      overrideTimeRange: draft.overrideTimeRange ?? TimeRange.Today,
+                    })
                   }
                 />
                 Override
               </label>
               {draft.timeMode === 'override' && (
-                <select
-                  className="select-control compact"
-                  value={draft.overrideTimeRange}
-                  onChange={(e) =>
-                    setDraft({
-                      ...draft,
-                      overrideTimeRange: e.target.value as TimeRange,
-                    })
-                  }
-                >
-                  {[TimeRange.Today, TimeRange.Month, TimeRange.Always].map((range) => (
-                    <option key={range} value={range}>
-                      {TIME_RANGE_LABELS[range]}
-                    </option>
-                  ))}
-                </select>
+                <div className="custom-range-picker">
+                  <select
+                    className="select-control compact"
+                    value={
+                      isCustomRange(draft.overrideTimeRange)
+                        ? 'custom'
+                        : draft.overrideTimeRange ?? TimeRange.Today
+                    }
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      setDraft({
+                        ...draft,
+                        overrideTimeRange:
+                          value === 'custom'
+                            ? createDefaultCustomRange()
+                            : (value as TimeRangeValue),
+                      });
+                    }}
+                  >
+                    {[TimeRange.Today, TimeRange.Month, TimeRange.Always].map((range) => (
+                      <option key={range} value={range}>
+                        {TIME_RANGE_LABELS[range]}
+                      </option>
+                    ))}
+                    <option value="custom">Custom</option>
+                  </select>
+                  {isCustomRange(draft.overrideTimeRange) && (
+                    <div className="custom-range-fields">
+                      <label className="hint">
+                        Start
+                        <input
+                          type="datetime-local"
+                          value={toInputDateTimeValue(draft.overrideTimeRange.start)}
+                          onChange={(e) => {
+                            const iso = fromInputDateTimeValue(e.target.value);
+                            if (!iso) return;
+                            setDraft({
+                              ...draft,
+                              overrideTimeRange: ensureValidCustomRange({
+                                ...draft.overrideTimeRange!,
+                                start: iso,
+                              }),
+                            });
+                          }}
+                        />
+                      </label>
+                      <label className="hint">
+                        End
+                        <input
+                          type="datetime-local"
+                          value={toInputDateTimeValue(draft.overrideTimeRange.end)}
+                          onChange={(e) => {
+                            const iso = fromInputDateTimeValue(e.target.value);
+                            if (!iso) return;
+                            setDraft({
+                              ...draft,
+                              overrideTimeRange: ensureValidCustomRange({
+                                ...draft.overrideTimeRange!,
+                                end: iso,
+                              }),
+                            });
+                          }}
+                        />
+                      </label>
+                    </div>
+                  )}
+                </div>
               )}
             </div>
           </label>
