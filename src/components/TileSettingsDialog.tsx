@@ -21,7 +21,7 @@ const presetOptions: {
 }[] = [
   {
     key: 'totalPhotos',
-    label: 'Total photos',
+    label: "Totaal aantal foto's",
     endpointKey: 'totalPhotos',
     type: 'kpi',
     applicationName: 'frontend',
@@ -30,7 +30,7 @@ const presetOptions: {
   },
   {
     key: 'avgPhotoDuration',
-    label: 'Avg. photo duration',
+    label: 'Gemiddelde fotoduur',
     endpointKey: 'avgPhotoDuration',
     type: 'kpi',
     applicationName: 'frontend',
@@ -39,7 +39,7 @@ const presetOptions: {
   },
   {
     key: 'avgUploadDuration',
-    label: 'Avg. upload duration',
+    label: 'Gemiddelde uploadduur',
     endpointKey: 'avgUploadDuration',
     type: 'kpi',
     applicationName: 'frontend',
@@ -48,7 +48,7 @@ const presetOptions: {
   },
   {
     key: 'totalPrints',
-    label: 'Total prints',
+    label: 'Totaal aantal afdrukken',
     endpointKey: 'totalPrints',
     type: 'kpi',
     applicationName: 'print',
@@ -57,7 +57,7 @@ const presetOptions: {
   },
   {
     key: 'uploadSpeed',
-    label: 'Upload speed',
+    label: 'Uploadsnelheid',
     endpointKey: 'uploadSpeed',
     type: 'chart',
     applicationName: 'frontend',
