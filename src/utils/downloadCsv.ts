@@ -140,6 +140,13 @@ const triggerCsvDownload = (csv: string) => {
   URL.revokeObjectURL(url);
 };
 
+/**
+ * Generates a CSV export for the configured dashboard tiles and triggers a download.
+ *
+ * @param tiles - Visible dashboard tiles to include in the export.
+ * @param globalTimeRange - The global time range selection applied to tiles using the global mode.
+ * @param eventApi - API instance used to fetch tile values.
+ */
 export const downloadDashboardCsv = async (
   tiles: TileConfig[],
   globalTimeRange: TimeRange,
