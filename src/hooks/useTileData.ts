@@ -3,7 +3,6 @@ import {
   TileConfig,
   TimeSeriesPoint,
   TimeRangeValue,
-  TimeRange,
   KpiResult,
 } from '../dashboardTypes';
 import { useEventApi } from '../context/ApiContext';
