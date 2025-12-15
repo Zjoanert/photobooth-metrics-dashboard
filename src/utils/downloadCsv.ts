@@ -1,6 +1,6 @@
 import { EventApi, getDefaultKpiStatForEndpoint } from '../api/dashboardEventApi';
-import { TileConfig, TimeRange } from '../dashboardTypes';
-import { TIME_RANGE_LABELS, getEffectiveTimeRange } from './timeRange';
+import { TileConfig, TimeRangeValue } from '../dashboardTypes';
+import { formatTimeRangeLabel, getEffectiveTimeRange } from './timeRange';
 
 const formatNumber = (value: number, decimals?: number) => value.toFixed(decimals ?? 0);
 
@@ -27,7 +27,7 @@ const formatDuration = (ms: number): string => {
 
 const buildKpiRow = async (
   tile: TileConfig,
-  effectiveRange: TimeRange,
+  effectiveRange: TimeRangeValue,
   timeRangeLabel: string,
   eventApi: EventApi,
 ): Promise<string[]> => {
@@ -53,7 +53,7 @@ const buildKpiRow = async (
 
 const buildChartRows = async (
   tile: TileConfig,
-  effectiveRange: TimeRange,
+  effectiveRange: TimeRangeValue,
   timeRangeLabel: string,
   eventApi: EventApi,
 ): Promise<string[][]> => {
@@ -91,7 +91,7 @@ const buildChartRows = async (
 
 const buildRecencyRow = async (
   tile: TileConfig,
-  effectiveRange: TimeRange,
+  effectiveRange: TimeRangeValue,
   timeRangeLabel: string,
   eventApi: EventApi,
 ): Promise<string[]> => {
@@ -149,7 +149,7 @@ const triggerCsvDownload = (csv: string) => {
  */
 export const downloadDashboardCsv = async (
   tiles: TileConfig[],
-  globalTimeRange: TimeRange,
+  globalTimeRange: TimeRangeValue,
   eventApi: EventApi,
 ): Promise<void> => {
   const rows: string[][] = [
@@ -158,7 +158,7 @@ export const downloadDashboardCsv = async (
 
   for (const tile of tiles) {
     const effectiveRange = getEffectiveTimeRange(tile, globalTimeRange);
-    const timeRangeLabel = TIME_RANGE_LABELS[effectiveRange];
+    const timeRangeLabel = formatTimeRangeLabel(effectiveRange);
 
     try {
       if (tile.type === 'kpi') {

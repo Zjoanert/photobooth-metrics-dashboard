@@ -97,6 +97,7 @@ export const TileSettingsDialog: React.FC<TileSettingsDialogProps> = ({
   const [usePreset, setUsePreset] = useState<boolean>(Boolean(tile.presetKey));
   const selectedKpiStat =
     draft.kpiStat ?? getDefaultKpiStatForEndpoint(draft.endpointKey);
+  const overrideRange = draft.overrideTimeRange ?? TimeRange.Today;
 
   const handlePresetChange = (key: string) => {
     const preset = presetOptions.find((p) => p.key === key);
@@ -305,11 +306,7 @@ export const TileSettingsDialog: React.FC<TileSettingsDialogProps> = ({
                 <div className="custom-range-picker">
                   <select
                     className="select-control compact"
-                    value={
-                      isCustomRange(draft.overrideTimeRange)
-                        ? 'custom'
-                        : draft.overrideTimeRange ?? TimeRange.Today
-                    }
+                    value={isCustomRange(overrideRange) ? 'custom' : overrideRange}
                     onChange={(e) => {
                       const value = e.target.value;
                       setDraft({
@@ -328,20 +325,20 @@ export const TileSettingsDialog: React.FC<TileSettingsDialogProps> = ({
                     ))}
                     <option value="custom">Custom</option>
                   </select>
-                  {isCustomRange(draft.overrideTimeRange) && (
+                  {isCustomRange(overrideRange) && (
                     <div className="custom-range-fields">
                       <label className="hint">
                         Start
                         <input
                           type="datetime-local"
-                          value={toInputDateTimeValue(draft.overrideTimeRange.start)}
+                          value={toInputDateTimeValue(overrideRange.start)}
                           onChange={(e) => {
                             const iso = fromInputDateTimeValue(e.target.value);
                             if (!iso) return;
                             setDraft({
                               ...draft,
                               overrideTimeRange: ensureValidCustomRange({
-                                ...draft.overrideTimeRange!,
+                                ...overrideRange,
                                 start: iso,
                               }),
                             });
@@ -352,14 +349,14 @@ export const TileSettingsDialog: React.FC<TileSettingsDialogProps> = ({
                         End
                         <input
                           type="datetime-local"
-                          value={toInputDateTimeValue(draft.overrideTimeRange.end)}
+                          value={toInputDateTimeValue(overrideRange.end)}
                           onChange={(e) => {
                             const iso = fromInputDateTimeValue(e.target.value);
                             if (!iso) return;
                             setDraft({
                               ...draft,
                               overrideTimeRange: ensureValidCustomRange({
-                                ...draft.overrideTimeRange!,
+                                ...overrideRange,
                                 end: iso,
                               }),
                             });

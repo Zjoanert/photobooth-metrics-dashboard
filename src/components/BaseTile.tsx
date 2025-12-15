@@ -33,6 +33,8 @@ export const BaseTile: React.FC<BaseTileProps> = ({
   onDelete,
   children,
 }) => {
+  const overrideRange = tile.overrideTimeRange ?? TimeRange.Today;
+
   const handleCustomRangeChange = (
     field: 'start' | 'end',
     value: string,
@@ -40,8 +42,8 @@ export const BaseTile: React.FC<BaseTileProps> = ({
     const iso = fromInputDateTimeValue(value);
     if (!iso) return;
 
-    const current = isCustomRange(tile.overrideTimeRange)
-      ? tile.overrideTimeRange
+    const current = isCustomRange(overrideRange)
+      ? overrideRange
       : createDefaultCustomRange();
 
     const next = ensureValidCustomRange({ ...current, [field]: iso });
@@ -64,17 +66,13 @@ export const BaseTile: React.FC<BaseTileProps> = ({
         <>
           <select
             className="select-control compact"
-            value={
-              isCustomRange(tile.overrideTimeRange)
-                ? 'custom'
-                : tile.overrideTimeRange ?? TimeRange.Today
-            }
+            value={isCustomRange(overrideRange) ? 'custom' : overrideRange}
             onChange={(e) =>
               onLocalTimeRangeChange(
                 'override',
                 e.target.value === 'custom'
                   ? createDefaultCustomRange()
-                  : ((e.target.value as TimeRange) ?? tile.overrideTimeRange ?? TimeRange.Today),
+                  : ((e.target.value as TimeRange) ?? overrideRange),
               )
             }
           >
@@ -85,13 +83,13 @@ export const BaseTile: React.FC<BaseTileProps> = ({
             ))}
             <option value="custom">Custom</option>
           </select>
-          {isCustomRange(tile.overrideTimeRange) && (
+          {isCustomRange(overrideRange) && (
             <div className="custom-range-fields">
               <label className="hint">
                 Start
                 <input
                   type="datetime-local"
-                  value={toInputDateTimeValue(tile.overrideTimeRange.start)}
+                  value={toInputDateTimeValue(overrideRange.start)}
                   onChange={(e) => handleCustomRangeChange('start', e.target.value)}
                 />
               </label>
@@ -99,7 +97,7 @@ export const BaseTile: React.FC<BaseTileProps> = ({
                 End
                 <input
                   type="datetime-local"
-                  value={toInputDateTimeValue(tile.overrideTimeRange.end)}
+                  value={toInputDateTimeValue(overrideRange.end)}
                   onChange={(e) => handleCustomRangeChange('end', e.target.value)}
                 />
               </label>
