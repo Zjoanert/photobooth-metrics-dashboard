@@ -4,6 +4,14 @@ export enum TimeRange {
   Always = 'always',
 }
 
+export interface CustomTimeRange {
+  type: 'custom';
+  start: string;
+  end: string;
+}
+
+export type TimeRangeValue = TimeRange | CustomTimeRange;
+
 export type TileTimeMode = 'global' | 'override';
 
 export type TileType = 'kpi' | 'chart' | 'recency';
@@ -27,7 +35,7 @@ export interface TileConfig {
   eventName?: string;
   kpiStat?: KpiStat;
   timeMode: TileTimeMode;
-  overrideTimeRange?: TimeRange;
+  overrideTimeRange?: TimeRangeValue;
   unit?: string;
   decimals?: number;
 }

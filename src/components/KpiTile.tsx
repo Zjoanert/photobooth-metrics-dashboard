@@ -1,11 +1,11 @@
 import React from 'react';
-import { TileConfig, TimeRange } from '../dashboardTypes';
+import { TileConfig, TimeRangeValue } from '../dashboardTypes';
 import { BaseTile } from './BaseTile';
 import { useTileData } from '../hooks/useTileData';
 
 interface KpiTileProps {
   tile: TileConfig;
-  globalTimeRange: TimeRange;
+  globalTimeRange: TimeRangeValue;
   isEditMode: boolean;
   onUpdateTile(id: string, patch: Partial<TileConfig>): void;
   onOpenSettings(tile: TileConfig): void;

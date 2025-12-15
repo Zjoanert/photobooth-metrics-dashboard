@@ -1,14 +1,22 @@
 import React from 'react';
-import { TileConfig, TimeRange, TileTimeMode } from '../dashboardTypes';
-import { TIME_RANGE_LABELS } from '../utils/timeRange';
+import { TileConfig, TimeRange, TileTimeMode, TimeRangeValue } from '../dashboardTypes';
+import {
+  TIME_RANGE_LABELS,
+  createDefaultCustomRange,
+  ensureValidCustomRange,
+  formatTimeRangeLabel,
+  fromInputDateTimeValue,
+  isCustomRange,
+  toInputDateTimeValue,
+} from '../utils/timeRange';
 
 interface BaseTileProps {
   tile: TileConfig;
-  globalTimeRange: TimeRange;
+  globalTimeRange: TimeRangeValue;
   isEditMode: boolean;
   isLoading: boolean;
   error?: string;
-  onLocalTimeRangeChange(mode: TileTimeMode, range?: TimeRange): void;
+  onLocalTimeRangeChange(mode: TileTimeMode, range?: TimeRangeValue): void;
   onOpenSettings(): void;
   onDelete?(id: string): void;
   children: React.ReactNode;
@@ -25,6 +33,21 @@ export const BaseTile: React.FC<BaseTileProps> = ({
   onDelete,
   children,
 }) => {
+  const handleCustomRangeChange = (
+    field: 'start' | 'end',
+    value: string,
+  ) => {
+    const iso = fromInputDateTimeValue(value);
+    if (!iso) return;
+
+    const current = isCustomRange(tile.overrideTimeRange)
+      ? tile.overrideTimeRange
+      : createDefaultCustomRange();
+
+    const next = ensureValidCustomRange({ ...current, [field]: iso });
+    onLocalTimeRangeChange('override', next);
+  };
+
   const timeRangeSelector = (
     <div className="tile-time-controls">
       <select
@@ -38,24 +61,53 @@ export const BaseTile: React.FC<BaseTileProps> = ({
         <option value="override">Override</option>
       </select>
       {tile.timeMode === 'override' && (
-        <select
-          className="select-control compact"
-          value={tile.overrideTimeRange}
-          onChange={(e) =>
-            onLocalTimeRangeChange(
-              'override',
-              (e.target.value as TimeRange) ?? tile.overrideTimeRange,
-            )
-          }
-        >
-          {[TimeRange.Today, TimeRange.Month, TimeRange.Always].map((range) => (
-            <option key={range} value={range}>
-              {TIME_RANGE_LABELS[range]}
-            </option>
-          ))}
-        </select>
+        <>
+          <select
+            className="select-control compact"
+            value={
+              isCustomRange(tile.overrideTimeRange)
+                ? 'custom'
+                : tile.overrideTimeRange ?? TimeRange.Today
+            }
+            onChange={(e) =>
+              onLocalTimeRangeChange(
+                'override',
+                e.target.value === 'custom'
+                  ? createDefaultCustomRange()
+                  : ((e.target.value as TimeRange) ?? tile.overrideTimeRange ?? TimeRange.Today),
+              )
+            }
+          >
+            {[TimeRange.Today, TimeRange.Month, TimeRange.Always].map((range) => (
+              <option key={range} value={range}>
+                {TIME_RANGE_LABELS[range]}
+              </option>
+            ))}
+            <option value="custom">Custom</option>
+          </select>
+          {isCustomRange(tile.overrideTimeRange) && (
+            <div className="custom-range-fields">
+              <label className="hint">
+                Start
+                <input
+                  type="datetime-local"
+                  value={toInputDateTimeValue(tile.overrideTimeRange.start)}
+                  onChange={(e) => handleCustomRangeChange('start', e.target.value)}
+                />
+              </label>
+              <label className="hint">
+                End
+                <input
+                  type="datetime-local"
+                  value={toInputDateTimeValue(tile.overrideTimeRange.end)}
+                  onChange={(e) => handleCustomRangeChange('end', e.target.value)}
+                />
+              </label>
+            </div>
+          )}
+        </>
       )}
-      {tile.timeMode === 'global' && <span className="hint">{TIME_RANGE_LABELS[globalTimeRange]}</span>}
+      {tile.timeMode === 'global' && <span className="hint">{formatTimeRangeLabel(globalTimeRange)}</span>}
     </div>
   );
 

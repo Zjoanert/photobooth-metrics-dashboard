@@ -1,28 +1,29 @@
-import { KpiResult, KpiStat, TimeRange, TimeSeriesPoint } from '../dashboardTypes';
+import { KpiResult, KpiStat, TimeRange, TimeRangeValue, TimeSeriesPoint } from '../dashboardTypes';
+import { isCustomRange } from '../utils/timeRange';
 import { Event } from './eventsApi';
 import { EventStats } from './eventsApi.types';
 
 export interface EventApi {
-  getTotalPhotos(range: TimeRange): Promise<KpiResult>;
-  getAveragePhotoDuration(range: TimeRange): Promise<KpiResult>;
-  getAverageUploadDuration(range: TimeRange): Promise<KpiResult>;
-  getUploadSpeedSeries(range: TimeRange): Promise<TimeSeriesPoint[]>;
+  getTotalPhotos(range: TimeRangeValue): Promise<KpiResult>;
+  getAveragePhotoDuration(range: TimeRangeValue): Promise<KpiResult>;
+  getAverageUploadDuration(range: TimeRangeValue): Promise<KpiResult>;
+  getUploadSpeedSeries(range: TimeRangeValue): Promise<TimeSeriesPoint[]>;
   getKpiByEndpoint(
     endpointKey: string,
-    range: TimeRange,
+    range: TimeRangeValue,
     stat?: KpiStat,
     applicationName?: string,
     eventName?: string,
   ): Promise<KpiResult>;
   getSeriesByEndpoint(
     endpointKey: string,
-    range: TimeRange,
+    range: TimeRangeValue,
     applicationName?: string,
     eventName?: string,
   ): Promise<TimeSeriesPoint[]>;
   getLatestEventTime(
     endpointKey: string,
-    range: TimeRange,
+    range: TimeRangeValue,
     applicationName?: string,
     eventName?: string,
   ): Promise<string | null>;
@@ -89,7 +90,7 @@ export const getDefaultKpiStatForEndpoint = (endpointKey: string): KpiStat => {
   return config.defaultStat;
 };
 
-const getRangeStart = (range: TimeRange): string | undefined => {
+const getPresetRangeStart = (range: TimeRange): string | undefined => {
   const now = new Date();
   switch (range) {
     case TimeRange.Today: {
@@ -107,6 +108,26 @@ const getRangeStart = (range: TimeRange): string | undefined => {
   }
 };
 
+const getRangeParams = (range: TimeRangeValue): { from?: string; to?: string } => {
+  if (isCustomRange(range)) {
+    return { from: range.start, to: range.end };
+  }
+  return { from: getPresetRangeStart(range) };
+};
+
+const normalizeToPresetRange = (range: TimeRangeValue): TimeRange => {
+  if (!isCustomRange(range)) return range;
+
+  const start = new Date(range.start).getTime();
+  const end = new Date(range.end).getTime();
+  if (Number.isNaN(start) || Number.isNaN(end)) return TimeRange.Always;
+
+  const diffHours = Math.max(0, (end - start) / (1000 * 60 * 60));
+  if (diffHours <= 48) return TimeRange.Today;
+  if (diffHours <= 24 * 31) return TimeRange.Month;
+  return TimeRange.Always;
+};
+
 export class HttpEventApi implements EventApi {
   constructor(private baseUrl: string) {
     this.baseUrl = baseUrl.replace(/\/$/, '');
@@ -114,17 +135,18 @@ export class HttpEventApi implements EventApi {
 
   private async fetchEvents(
     endpointKey: string,
-    range: TimeRange,
+    range: TimeRangeValue,
     applicationName?: string,
     eventName?: string,
   ): Promise<Event[]> {
     const config = resolveEndpointConfig(endpointKey, applicationName, eventName);
 
-    const from = getRangeStart(range);
+    const { from, to } = getRangeParams(range);
     const query = buildQuery({
       applicationName: config.applicationName,
       eventName: config.eventName,
       from,
+      to,
     });
 
     const response = await fetch(`${this.baseUrl}/events${query}`);
@@ -136,17 +158,18 @@ export class HttpEventApi implements EventApi {
 
   private async fetchStats(
     endpointKey: string,
-    range: TimeRange,
+    range: TimeRangeValue,
     applicationName?: string,
     eventName?: string,
   ): Promise<EventStats> {
     const config = resolveEndpointConfig(endpointKey, applicationName, eventName);
 
-    const from = getRangeStart(range);
+    const { from, to } = getRangeParams(range);
     const query = buildQuery({
       applicationName: config.applicationName,
       eventName: config.eventName,
       from,
+      to,
     });
 
     const response = await fetch(`${this.baseUrl}/events/stats${query}`);
@@ -156,25 +179,25 @@ export class HttpEventApi implements EventApi {
     return response.json() as Promise<EventStats>;
   }
 
-  getTotalPhotos(range: TimeRange): Promise<KpiResult> {
+  getTotalPhotos(range: TimeRangeValue): Promise<KpiResult> {
     return this.getKpiByEndpoint('totalPhotos', range);
   }
 
-  getAveragePhotoDuration(range: TimeRange): Promise<KpiResult> {
+  getAveragePhotoDuration(range: TimeRangeValue): Promise<KpiResult> {
     return this.getKpiByEndpoint('avgPhotoDuration', range);
   }
 
-  getAverageUploadDuration(range: TimeRange): Promise<KpiResult> {
+  getAverageUploadDuration(range: TimeRangeValue): Promise<KpiResult> {
     return this.getKpiByEndpoint('avgUploadDuration', range);
   }
 
-  getUploadSpeedSeries(range: TimeRange): Promise<TimeSeriesPoint[]> {
+  getUploadSpeedSeries(range: TimeRangeValue): Promise<TimeSeriesPoint[]> {
     return this.getSeriesByEndpoint('uploadSpeed', range);
   }
 
   async getKpiByEndpoint(
     endpointKey: string,
-    range: TimeRange,
+    range: TimeRangeValue,
     stat?: KpiStat,
     applicationName?: string,
     eventName?: string,
@@ -191,7 +214,7 @@ export class HttpEventApi implements EventApi {
 
   async getSeriesByEndpoint(
     endpointKey: string,
-    range: TimeRange,
+    range: TimeRangeValue,
     applicationName?: string,
     eventName?: string,
   ): Promise<TimeSeriesPoint[]> {
@@ -203,7 +226,7 @@ export class HttpEventApi implements EventApi {
 
   async getLatestEventTime(
     endpointKey: string,
-    range: TimeRange,
+    range: TimeRangeValue,
     applicationName?: string,
     eventName?: string,
   ): Promise<string | null> {
@@ -233,10 +256,11 @@ export class MockEventApi implements EventApi {
     });
   }
 
-  async getTotalPhotos(range: TimeRange): Promise<KpiResult> {
+  async getTotalPhotos(range: TimeRangeValue): Promise<KpiResult> {
+    const presetRange = normalizeToPresetRange(range);
     const base = 12000;
     const factor =
-      range === TimeRange.Today ? 0.02 : range === TimeRange.Month ? 0.5 : 1;
+      presetRange === TimeRange.Today ? 0.02 : presetRange === TimeRange.Month ? 0.5 : 1;
 
     const value = Math.round(base * factor);
     const trend = 5;
@@ -244,15 +268,17 @@ export class MockEventApi implements EventApi {
     return this.simulateDelay({ value, trendPercent: trend });
   }
 
-  async getAveragePhotoDuration(range: TimeRange): Promise<KpiResult> {
+  async getAveragePhotoDuration(range: TimeRangeValue): Promise<KpiResult> {
+    const presetRange = normalizeToPresetRange(range);
     const value =
-      range === TimeRange.Today ? 2.4 : range === TimeRange.Month ? 2.5 : 2.6;
+      presetRange === TimeRange.Today ? 2.4 : presetRange === TimeRange.Month ? 2.5 : 2.6;
     return this.simulateDelay({ value, trendPercent: 0 });
   }
 
-  async getAverageUploadDuration(range: TimeRange): Promise<KpiResult> {
+  async getAverageUploadDuration(range: TimeRangeValue): Promise<KpiResult> {
+    const presetRange = normalizeToPresetRange(range);
     const value =
-      range === TimeRange.Today ? 1.1 : range === TimeRange.Month ? 1.15 : 1.2;
+      presetRange === TimeRange.Today ? 1.1 : presetRange === TimeRange.Month ? 1.15 : 1.2;
     const trend = -3;
     return this.simulateDelay({ value, trendPercent: trend });
   }
@@ -265,11 +291,11 @@ export class MockEventApi implements EventApi {
     return values[selectedStat] ?? 0;
   }
 
-  async getUploadSpeedSeries(range: TimeRange): Promise<TimeSeriesPoint[]> {
+  async getUploadSpeedSeries(range: TimeRangeValue): Promise<TimeSeriesPoint[]> {
     const points: TimeSeriesPoint[] = [];
     const now = new Date();
 
-    const hours = range === TimeRange.Today ? 24 : 24 * 7;
+    const hours = normalizeToPresetRange(range) === TimeRange.Today ? 24 : 24 * 7;
     for (let i = hours; i >= 0; i--) {
       const t = new Date(now.getTime() - i * 60 * 60 * 1000);
       const value = 0.5 + Math.sin(i / 3) + Math.random() * 0.3;
@@ -280,7 +306,7 @@ export class MockEventApi implements EventApi {
 
   async getKpiByEndpoint(
     endpointKey: string,
-    range: TimeRange,
+    range: TimeRangeValue,
     stat?: KpiStat,
     _applicationName?: string,
     _eventName?: string,
@@ -319,7 +345,7 @@ export class MockEventApi implements EventApi {
 
   async getSeriesByEndpoint(
     endpointKey: string,
-    range: TimeRange,
+    range: TimeRangeValue,
     _applicationName?: string,
     _eventName?: string,
   ): Promise<TimeSeriesPoint[]> {
@@ -333,7 +359,7 @@ export class MockEventApi implements EventApi {
 
   async getLatestEventTime(
     _endpointKey: string,
-    _range: TimeRange,
+    _range: TimeRangeValue,
     _applicationName?: string,
     _eventName?: string,
   ): Promise<string | null> {

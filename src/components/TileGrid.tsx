@@ -1,5 +1,5 @@
 import React from 'react';
-import { TileConfig, TimeRange } from '../dashboardTypes';
+import { TileConfig, TimeRangeValue } from '../dashboardTypes';
 import { KpiTile } from './KpiTile';
 import { ChartTile } from './ChartTile';
 import { TileSettingsDialog } from './TileSettingsDialog';
@@ -8,7 +8,7 @@ import { RecencyTile } from './RecencyTile';
 interface TileGridProps {
   tiles: TileConfig[];
   isEditMode: boolean;
-  globalTimeRange: TimeRange;
+  globalTimeRange: TimeRangeValue;
   onTilesReorder(sourceId: string, targetId: string): void;
   onTileChange(id: string, patch: Partial<TileConfig>): void;
   onTileDelete(id: string): void;
