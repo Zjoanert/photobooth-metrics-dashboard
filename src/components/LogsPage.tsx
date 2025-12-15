@@ -7,6 +7,8 @@ import { ApplicationsPanel } from './logs/ApplicationsPanel';
 import { LogsFilters } from './logs/LogsFilters';
 import { LogsActions } from './logs/LogsActions';
 import { LogLines } from './logs/LogLines';
+import { restartServer } from '../api/serverManagementApi';
+import { useSettings } from '../context/SettingsContext';
 
 const APPLICATIONS = [
   { id: 'frontend', label: 'Frontend' },
@@ -34,6 +36,12 @@ export const LogsPage: React.FC = () => {
   const [dateError, setDateError] = useState<string | null>(null);
   const [downloadError, setDownloadError] = useState<string | null>(null);
   const [isDownloading, setIsDownloading] = useState(false);
+  const [isRestarting, setIsRestarting] = useState(false);
+  const [restartStatus, setRestartStatus] = useState<string | null>(null);
+
+  const { settings } = useSettings();
+
+  const isRestartFeatureEnabled = false;
 
   const { dates: availableDates, error: datesError, isLoading: isLoadingDates } =
     useAvailableLogDates(selectedApp);
@@ -105,6 +113,28 @@ export const LogsPage: React.FC = () => {
     }
   };
 
+  const handleRestart = async () => {
+    if (!isRestartFeatureEnabled) return;
+
+    const confirmed = window.confirm(
+      `Restart ${selectedApp}? This will temporarily interrupt service while the server reboots.`,
+    );
+
+    if (!confirmed) return;
+
+    setRestartStatus(null);
+    setIsRestarting(true);
+
+    try {
+      await restartServer(settings.apiBaseUrl, selectedApp);
+      setRestartStatus(`Restart requested for ${selectedApp}.`);
+    } catch (error) {
+      setRestartStatus((error as Error).message ?? 'Failed to request restart.');
+    } finally {
+      setIsRestarting(false);
+    }
+  };
+
   return (
     <div className="logs-page">
       <div className="logs-layout">
@@ -138,9 +168,14 @@ export const LogsPage: React.FC = () => {
               />
 
               <LogsActions
-                disabled={!selectedDate || isDownloading || isLoading}
+                downloadDisabled={!selectedDate || isDownloading || isLoading}
+                restartDisabled={
+                  !isRestartFeatureEnabled || isRestarting || isLoading || !selectedApp
+                }
                 isDownloading={isDownloading}
+                isRestarting={isRestarting}
                 onDownload={handleDownload}
+                onRestart={handleRestart}
               />
             </div>
           </header>
@@ -153,6 +188,12 @@ export const LogsPage: React.FC = () => {
             downloadError={downloadError}
             selectedDate={selectedDate}
           />
+
+          {restartStatus && (
+            <p className={restartStatus.toLowerCase().includes('failed') ? 'error' : 'muted'}>
+              {restartStatus}
+            </p>
+          )}
         </div>
       </div>
     </div>
