@@ -14,6 +14,9 @@ interface TileGridProps {
   onTileDelete(id: string): void;
 }
 
+/**
+ * Renders all dashboard tiles with drag-and-drop ordering and per-tile controls.
+ */
 export const TileGrid: React.FC<TileGridProps> = ({
   tiles,
   isEditMode,

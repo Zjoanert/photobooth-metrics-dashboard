@@ -18,6 +18,9 @@ const APPLICATIONS = [
 
 const LOG_LEVELS: LogLevel[] = ['error', 'warn', 'info', 'log', 'debug'];
 
+/**
+ * Presents a log viewer with application selection, filtering, and download controls.
+ */
 export const LogsPage: React.FC = () => {
   const [selectedApp, setSelectedApp] = useState<string>(APPLICATIONS[0].id);
   const [customAppInput, setCustomAppInput] = useState<string>('');
