@@ -30,8 +30,7 @@ export const downloadLogFile = (
     throw new Error('No application selected for log download');
   }
 
-  const header = `Log export for ${applicationId}${date ? ` on ${date}` : ''}`;
   const lines = entries.length ? entries.map(formatLogLine) : ['(no log entries)'];
-  const content = [header, '', ...lines].join('\n');
+  const content = lines.join('\n');
   triggerLogDownload(content, applicationId, date ?? undefined);
 };
