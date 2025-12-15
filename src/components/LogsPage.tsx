@@ -1,7 +1,12 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { LogLevel } from '../api/logsApi';
+import { downloadLogFile } from '../utils/downloadLogs';
 import { useLogsData } from '../hooks/useLogsData';
 import { useAvailableLogDates } from '../hooks/useAvailableLogDates';
+import { ApplicationsPanel } from './logs/ApplicationsPanel';
+import { LogsFilters } from './logs/LogsFilters';
+import { LogsActions } from './logs/LogsActions';
+import { LogLines } from './logs/LogLines';
 
 const APPLICATIONS = [
   { id: 'frontend', label: 'Frontend' },
@@ -12,15 +17,6 @@ const APPLICATIONS = [
 ];
 
 const LOG_LEVELS: LogLevel[] = ['error', 'warn', 'info', 'log', 'debug'];
-
-const formatTimestamp = (timestamp: string): string => {
-  const date = new Date(timestamp);
-  return `${date.toLocaleDateString()} ${date.toLocaleTimeString()}`;
-};
-
-const normalizeMessage = (message: string | string[]): string => {
-  return Array.isArray(message) ? message.join(' ') : message;
-};
 
 export const LogsPage: React.FC = () => {
   const [selectedApp, setSelectedApp] = useState<string>(APPLICATIONS[0].id);
@@ -33,6 +29,8 @@ export const LogsPage: React.FC = () => {
   ]);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [dateError, setDateError] = useState<string | null>(null);
+  const [downloadError, setDownloadError] = useState<string | null>(null);
+  const [isDownloading, setIsDownloading] = useState(false);
 
   const { dates: availableDates, error: datesError, isLoading: isLoadingDates } =
     useAvailableLogDates(selectedApp);
@@ -86,33 +84,34 @@ export const LogsPage: React.FC = () => {
     setSelectedDate(value);
   };
 
+  const handleDownload = () => {
+    setDownloadError(null);
+
+    if (!selectedDate) {
+      setDownloadError('Select a date before downloading logs.');
+      return;
+    }
+
+    setIsDownloading(true);
+    try {
+      downloadLogFile(sortedEntries, selectedApp, selectedDate);
+    } catch (error) {
+      setDownloadError((error as Error).message ?? 'Failed to download logs');
+    } finally {
+      setIsDownloading(false);
+    }
+  };
+
   return (
     <div className="logs-page">
       <div className="logs-layout">
-        <aside className="logs-app-tabs" aria-label="Applications">
-          {APPLICATIONS.map((app) => (
-            <button
-              key={app.id}
-              className={selectedApp === app.id ? 'tab active' : 'tab'}
-              onClick={() => handleAppTabClick(app.id)}
-            >
-              {app.label}
-            </button>
-          ))}
-
-          <div className="custom-app">
-            <label className="field compact">
-              <span>Custom application</span>
-              <input
-                type="text"
-                placeholder="Enter application id"
-                value={customAppInput}
-                onChange={(e) => handleCustomAppChange(e.target.value)}
-              />
-              <p className="muted helper-text">Fetch logs for any service name.</p>
-            </label>
-          </div>
-        </aside>
+        <ApplicationsPanel
+          applications={APPLICATIONS}
+          selectedApp={selectedApp}
+          customAppInput={customAppInput}
+          onSelectApp={handleAppTabClick}
+          onCustomAppChange={handleCustomAppChange}
+        />
 
         <div className="logs-content">
           <header className="logs-header">
@@ -122,71 +121,35 @@ export const LogsPage: React.FC = () => {
                 Inspect recent log output per service. Use filters to narrow down the results.
               </p>
             </div>
-            <div className="logs-filters">
-              <label className="field compact">
-                <span>Log levels</span>
-                <div className="level-options">
-                  {LOG_LEVELS.map((level) => (
-                    <label key={level} className="chip">
-                      <input
-                        type="checkbox"
-                        checked={selectedLevels.includes(level)}
-                        onChange={() => toggleLevel(level)}
-                      />
-                      {level.toUpperCase()}
-                    </label>
-                  ))}
-                </div>
-              </label>
+            <div className="logs-controls">
+              <LogsFilters
+                logLevels={LOG_LEVELS}
+                selectedLevels={selectedLevels}
+                availableDates={availableDates}
+                selectedDate={selectedDate}
+                isLoadingDates={isLoadingDates}
+                datesError={datesError}
+                dateError={dateError}
+                onToggleLevel={toggleLevel}
+                onDateChange={handleDateChange}
+              />
 
-              <label className="field compact">
-                <span>Date</span>
-                <input
-                  type="date"
-                  value={selectedDate ?? ''}
-                  list="available-log-dates"
-                  min={availableDates.length ? availableDates[availableDates.length - 1] : undefined}
-                  max={availableDates.length ? availableDates[0] : undefined}
-                  onChange={(e) => handleDateChange(e.target.value)}
-                  disabled={isLoadingDates || availableDates.length === 0}
-                />
-                <datalist id="available-log-dates">
-                  {availableDates.map((date) => (
-                    <option key={date} value={date} />
-                  ))}
-                </datalist>
-                {isLoadingDates && <span className="muted helper-text">Loading available dates…</span>}
-                {datesError && <span className="error helper-text">{datesError}</span>}
-                {dateError && <span className="error helper-text">{dateError}</span>}
-                {!isLoadingDates && !datesError && availableDates.length === 0 && (
-                  <span className="muted helper-text">No log dates available.</span>
-                )}
-              </label>
+              <LogsActions
+                disabled={!selectedDate || isDownloading || isLoading}
+                isDownloading={isDownloading}
+                onDownload={handleDownload}
+              />
             </div>
           </header>
 
-          <section className="log-terminal" aria-live="polite">
-            {datesError && <p className="error">{datesError}</p>}
-            {!selectedDate && !isLoadingDates && (
-              <p className="muted">Select a date to view logs.</p>
-            )}
-            {isLoading && <p className="muted">Loading logs…</p>}
-            {error && <p className="error">{error}</p>}
-            {!isLoading && !error && selectedDate && sortedEntries.length === 0 && (
-              <p className="muted">No log lines for this selection.</p>
-            )}
-            {!isLoading && !error && selectedDate && sortedEntries.length > 0 && (
-              <div className="log-lines">
-                {sortedEntries.map((entry, index) => (
-                  <div className={`log-line level-${entry.level}`} key={`${entry.timestamp}-${index}`}>
-                    <span className="log-time">{formatTimestamp(entry.timestamp)}</span>
-                    <span className="log-level">{entry.level.toUpperCase()}</span>
-                    <span className="log-message">{normalizeMessage(entry.message)}</span>
-                  </div>
-                ))}
-              </div>
-            )}
-          </section>
+          <LogLines
+            entries={sortedEntries}
+            isLoading={isLoading}
+            error={error}
+            datesError={datesError}
+            downloadError={downloadError}
+            selectedDate={selectedDate}
+          />
         </div>
       </div>
     </div>
