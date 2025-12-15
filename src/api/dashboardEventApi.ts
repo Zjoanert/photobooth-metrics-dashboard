@@ -64,7 +64,7 @@ const ENDPOINT_MAP: Record<string, EndpointConfig> = {
   totalPrints: { applicationName: 'print', eventName: 'totalPrints', defaultStat: 'sum' },
 };
 
-const resolveEndpointConfig = (
+export const resolveEndpointConfig = (
   endpointKey: string,
   applicationName?: string,
   eventName?: string,
