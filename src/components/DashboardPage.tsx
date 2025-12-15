@@ -1,6 +1,8 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { DashboardPreset, TileConfig, TimeRange, TimeRangeValue } from '../dashboardTypes';
 import { getDefaultKpiStatForEndpoint } from '../api/dashboardEventApi';
+import { useEventApi } from '../context/ApiContext';
+import { downloadDashboardCsv } from '../utils/downloadCsv';
 import { DashboardHeader } from './DashboardHeader';
 import { DashboardToolbar } from './DashboardToolbar';
 import { TileGrid } from './TileGrid';
@@ -110,6 +112,7 @@ const readDashboardState = (): PersistedDashboardState | null => {
 export const DashboardPage: React.FC = () => {
   const presets = useMemo(() => createInitialPresets(), []);
   const savedState = useMemo(() => readDashboardState(), []);
+  const eventApi = useEventApi();
 
   const [globalTimeRange, setGlobalTimeRange] = useState<TimeRangeValue>(
     savedState?.globalTimeRange ?? TimeRange.Today,
@@ -139,6 +142,9 @@ export const DashboardPage: React.FC = () => {
     };
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
   }, [tiles, activePresetId, globalTimeRange]);
+
+  const [isDownloading, setIsDownloading] = useState(false);
+  const [downloadError, setDownloadError] = useState<string | null>(null);
 
   const activePreset = useMemo(
     () => presets.find((p) => p.id === activePresetId) ?? presets[0],
@@ -192,6 +198,19 @@ export const DashboardPage: React.FC = () => {
     });
   };
 
+  const handleDownloadCsv = async () => {
+    setIsDownloading(true);
+    setDownloadError(null);
+
+    try {
+      await downloadDashboardCsv(tiles, globalTimeRange, eventApi);
+    } catch (error) {
+      setDownloadError((error as Error).message ?? 'Failed to download metrics');
+    } finally {
+      setIsDownloading(false);
+    }
+  };
+
   return (
     <div className="dashboard-page">
       <DashboardHeader
@@ -206,7 +225,10 @@ export const DashboardPage: React.FC = () => {
         isEditMode={isEditMode}
         onToggleEditMode={() => setIsEditMode((v) => !v)}
         onAddTile={handleAddTile}
+        onDownloadCsv={handleDownloadCsv}
+        isDownloading={isDownloading}
       />
+      {downloadError && <p className="error">{downloadError}</p>}
 
       <TileGrid
         tiles={tiles}

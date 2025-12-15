@@ -165,6 +165,12 @@ button {
   color: var(--text);
 }
 
+button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
 button.primary {
   background: var(--primary);
   color: white;
@@ -540,11 +546,24 @@ button.secondary {
   flex-wrap: wrap;
 }
 
+.logs-controls {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
 .logs-filters {
   display: flex;
   gap: 12px;
   align-items: flex-start;
   flex-wrap: wrap;
+}
+
+.logs-actions {
+  display: flex;
+  align-items: center;
 }
 
 .field.compact {
