@@ -10,7 +10,7 @@ const createInitialPresets = (): DashboardPreset[] => {
     {
       id: 'total-photos',
       type: 'kpi',
-      label: 'Total photos',
+      label: "Totaal aantal foto's",
       presetKey: 'totalPhotos',
       endpointKey: 'totalPhotos',
       kpiStat: getDefaultKpiStatForEndpoint('totalPhotos'),
@@ -21,7 +21,7 @@ const createInitialPresets = (): DashboardPreset[] => {
     {
       id: 'total-prints',
       type: 'kpi',
-      label: 'Total prints',
+      label: 'Totaal aantal afdrukken',
       presetKey: 'totalPrints',
       endpointKey: 'totalPrints',
       kpiStat: getDefaultKpiStatForEndpoint('totalPrints'),
@@ -32,7 +32,7 @@ const createInitialPresets = (): DashboardPreset[] => {
     {
       id: 'avg-photo-time',
       type: 'kpi',
-      label: 'Avg. photo time (s)',
+      label: 'Gemiddelde fototijd (s)',
       presetKey: 'avgPhotoDuration',
       endpointKey: 'avgPhotoDuration',
       kpiStat: getDefaultKpiStatForEndpoint('avgPhotoDuration'),
@@ -43,7 +43,7 @@ const createInitialPresets = (): DashboardPreset[] => {
     {
       id: 'avg-upload-time',
       type: 'kpi',
-      label: 'Avg. upload time (s)',
+      label: 'Gemiddelde uploadtijd (s)',
       presetKey: 'avgUploadDuration',
       endpointKey: 'avgUploadDuration',
       kpiStat: getDefaultKpiStatForEndpoint('avgUploadDuration'),
@@ -54,7 +54,7 @@ const createInitialPresets = (): DashboardPreset[] => {
     {
       id: 'last-photo-age',
       type: 'recency',
-      label: 'Time since last photo',
+      label: 'Tijd sinds laatste foto',
       presetKey: 'totalPhotos',
       endpointKey: 'totalPhotos',
       timeMode: 'global',
@@ -62,7 +62,7 @@ const createInitialPresets = (): DashboardPreset[] => {
     {
       id: 'upload-speed',
       type: 'chart',
-      label: 'Upload speed (MB/s)',
+      label: 'Uploadsnelheid (MB/s)',
       presetKey: 'uploadSpeed',
       endpointKey: 'uploadSpeed',
       timeMode: 'global',
