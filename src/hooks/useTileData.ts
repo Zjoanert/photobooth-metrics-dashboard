@@ -1,6 +1,8 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { TileConfig, TimeSeriesPoint, TimeRange, KpiResult } from '../dashboardTypes';
 import { useEventApi } from '../context/ApiContext';
+import { resolveEndpointConfig } from '../api/dashboardEventApi';
+import { useSettings } from '../context/SettingsContext';
 import { getEffectiveTimeRange } from '../utils/timeRange';
 
 export interface TileDataResult {
@@ -16,16 +18,41 @@ export function useTileData(
   globalTimeRange: TimeRange,
 ): TileDataResult {
   const eventApi = useEventApi();
+  const { settings } = useSettings();
   const effectiveRange = getEffectiveTimeRange(tile, globalTimeRange);
   const [state, setState] = useState<TileDataResult>({
     isLoading: true,
   });
 
-  useEffect(() => {
-    let cancelled = false;
-    setState({ isLoading: true });
+  const isMountedRef = useRef(true);
 
-    const load = async () => {
+  useEffect(() => {
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
+
+  const endpointConfig = useMemo(() => {
+    try {
+      return resolveEndpointConfig(
+        tile.endpointKey,
+        tile.applicationName,
+        tile.eventName,
+      );
+    } catch (error) {
+      console.warn('Failed to resolve endpoint config', error);
+      return null;
+    }
+  }, [tile.endpointKey, tile.applicationName, tile.eventName]);
+
+  const fetchData = useCallback(
+    async (options?: { showLoading?: boolean }) => {
+      const showLoading = options?.showLoading ?? true;
+
+      if (showLoading) {
+        setState((prev) => ({ ...prev, isLoading: true, error: undefined }));
+      }
+
       try {
         if (tile.type === 'kpi') {
           const kpi = await eventApi.getKpiByEndpoint(
@@ -35,7 +62,7 @@ export function useTileData(
             tile.applicationName,
             tile.eventName,
           );
-          if (!cancelled) setState({ isLoading: false, kpi });
+          if (isMountedRef.current) setState({ isLoading: false, kpi });
         } else if (tile.type === 'chart') {
           const series = await eventApi.getSeriesByEndpoint(
             tile.endpointKey,
@@ -43,7 +70,7 @@ export function useTileData(
             tile.applicationName,
             tile.eventName,
           );
-          if (!cancelled) setState({ isLoading: false, series });
+          if (isMountedRef.current) setState({ isLoading: false, series });
         } else {
           const latestEventTimestamp = await eventApi.getLatestEventTime(
             tile.endpointKey,
@@ -51,34 +78,55 @@ export function useTileData(
             tile.applicationName,
             tile.eventName,
           );
-          if (!cancelled)
+          if (isMountedRef.current)
             setState({
               isLoading: false,
               latestEventTimestamp,
             });
         }
       } catch (e) {
-        if (!cancelled)
-          setState({
+        if (isMountedRef.current)
+          setState((prev) => ({
+            ...prev,
             isLoading: false,
             error: (e as Error).message ?? 'Unknown error',
-          });
+          }));
       }
+    },
+    [
+      effectiveRange,
+      eventApi,
+      tile.applicationName,
+      tile.endpointKey,
+      tile.eventName,
+      tile.kpiStat,
+      tile.type,
+    ],
+  );
+
+  useEffect(() => {
+    setState({ isLoading: true });
+    fetchData();
+  }, [fetchData]);
+
+  useEffect(() => {
+    if (settings.apiMode !== 'http' || !endpointConfig) return;
+    if (typeof EventSource === 'undefined') return;
+
+    const baseUrl = settings.apiBaseUrl.replace(/\/$/, '');
+    const streamUrl = `${baseUrl}/events/${endpointConfig.applicationName}/${endpointConfig.eventName}/stream`;
+    const stream = new EventSource(streamUrl);
+
+    const handleMessage = () => fetchData({ showLoading: false });
+    stream.onmessage = handleMessage;
+    stream.onerror = (error) => {
+      console.warn('Event stream error', error);
     };
 
-    load();
     return () => {
-      cancelled = true;
+      stream.close();
     };
-  }, [
-    tile.type,
-    tile.endpointKey,
-    tile.kpiStat,
-    tile.applicationName,
-    tile.eventName,
-    effectiveRange,
-    eventApi,
-  ]);
+  }, [endpointConfig, fetchData, settings.apiBaseUrl, settings.apiMode]);
 
   return state;
 }
