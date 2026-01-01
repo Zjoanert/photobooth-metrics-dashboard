@@ -4,6 +4,7 @@ import { KpiTile } from './KpiTile';
 import { ChartTile } from './ChartTile';
 import { TileSettingsDialog } from './TileSettingsDialog';
 import { RecencyTile } from './RecencyTile';
+import { MostRecentValueTile } from './MostRecentValueTile';
 
 interface TileGridProps {
   tiles: TileConfig[];
@@ -90,6 +91,8 @@ export const TileGrid: React.FC<TileGridProps> = ({
               return <KpiTile {...common} />;
             case 'chart':
               return <ChartTile {...common} />;
+            case 'most-recent':
+              return <MostRecentValueTile {...common} />;
             case 'recency':
               return <RecencyTile {...common} />;
             default:

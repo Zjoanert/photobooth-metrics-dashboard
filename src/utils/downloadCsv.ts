@@ -95,12 +95,14 @@ const buildRecencyRow = async (
   timeRangeLabel: string,
   eventApi: EventApi,
 ): Promise<string[]> => {
-  const latestEventTimestamp = await eventApi.getLatestEventTime(
+  const latestEvent = await eventApi.getLatestEvent(
     tile.endpointKey,
     effectiveRange,
     tile.applicationName,
     tile.eventName,
   );
+
+  const latestEventTimestamp = latestEvent?.timestamp ?? null;
 
   if (!latestEventTimestamp) {
     return [

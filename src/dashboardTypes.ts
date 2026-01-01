@@ -14,7 +14,7 @@ export type TimeRangeValue = TimeRange | CustomTimeRange;
 
 export type TileTimeMode = 'global' | 'override';
 
-export type TileType = 'kpi' | 'chart' | 'recency';
+export type TileType = 'kpi' | 'chart' | 'recency' | 'most-recent';
 
 export type KpiStat = 'count' | 'sum' | 'average' | 'min' | 'max';
 

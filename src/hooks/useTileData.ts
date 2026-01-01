@@ -15,7 +15,7 @@ export interface TileDataResult {
   error?: string;
   kpi?: KpiResult;
   series?: TimeSeriesPoint[];
-  latestEventTimestamp?: string | null;
+  latestEvent?: TimeSeriesPoint | null;
 }
 
 export function useTileData(
@@ -77,7 +77,7 @@ export function useTileData(
           );
           if (isMountedRef.current) setState({ isLoading: false, series });
         } else {
-          const latestEventTimestamp = await eventApi.getLatestEventTime(
+          const latestEvent = await eventApi.getLatestEvent(
             tile.endpointKey,
             effectiveRange,
             tile.applicationName,
@@ -86,7 +86,7 @@ export function useTileData(
           if (isMountedRef.current)
             setState({
               isLoading: false,
-              latestEventTimestamp,
+              latestEvent
             });
         }
       } catch (e) {

@@ -21,12 +21,12 @@ export interface EventApi {
     applicationName?: string,
     eventName?: string,
   ): Promise<TimeSeriesPoint[]>;
-  getLatestEventTime(
+  getLatestEvent(
     endpointKey: string,
     range: TimeRangeValue,
     applicationName?: string,
     eventName?: string,
-  ): Promise<string | null>;
+  ): Promise<TimeSeriesPoint | null>;
 }
 
 const buildQuery = (params: Record<string, string | number | undefined>) => {
@@ -224,24 +224,24 @@ export class HttpEventApi implements EventApi {
       .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
   }
 
-  async getLatestEventTime(
+  async getLatestEvent(
     endpointKey: string,
     range: TimeRangeValue,
     applicationName?: string,
     eventName?: string,
-  ): Promise<string | null> {
+  ): Promise<TimeSeriesPoint | null> {
     const events = await this.fetchEvents(endpointKey, range, applicationName, eventName);
     if (!events.length) return null;
 
-    const latest = events.reduce<{ timestamp: string; timeMs: number } | null>((current, event) => {
+    const latest = events.reduce<Event & { timeMs: number } | null>((current, event) => {
       const timeMs = new Date(event.timestamp).getTime();
       if (!current || timeMs > current.timeMs) {
-        return { timestamp: event.timestamp, timeMs };
+        return { ...event, timeMs };
       }
       return current;
     }, null);
 
-    return latest?.timestamp ?? null;
+    return latest ?? null;
   }
 }
 
@@ -357,15 +357,18 @@ export class MockEventApi implements EventApi {
     }
   }
 
-  async getLatestEventTime(
+  async getLatestEvent(
     _endpointKey: string,
     _range: TimeRangeValue,
     _applicationName?: string,
     _eventName?: string,
-  ): Promise<string | null> {
+  ): Promise<TimeSeriesPoint | null> {
     const now = new Date();
     const offsetMinutes = 5 + Math.round(Math.random() * 55);
     const latest = new Date(now.getTime() - offsetMinutes * 60 * 1000);
-    return this.simulateDelay(latest.toISOString());
+    return this.simulateDelay(latest.toISOString()).then(timestamp => ({
+      timestamp,
+      value: offsetMinutes
+    }))
   }
 }

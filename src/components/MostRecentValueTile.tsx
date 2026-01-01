@@ -25,7 +25,7 @@ const formatDuration = (ms: number): string => {
   return days > 0 ? `${days}d ${timePart}` : timePart;
 };
 
-export const RecencyTile: React.FC<RecencyTileProps> = ({
+export const MostRecentValueTile: React.FC<RecencyTileProps> = ({
   tile,
   globalTimeRange,
   isEditMode,
@@ -34,30 +34,11 @@ export const RecencyTile: React.FC<RecencyTileProps> = ({
   onDelete,
 }) => {
   const { isLoading, error, latestEvent } = useTileData(tile, globalTimeRange);
-  const [elapsedText, setElapsedText] = useState<string>('');
-
-  const latestEventTimestamp = useMemo(() => latestEvent?.timestamp, [latestEvent])
 
   const lastEventDate = useMemo(
-    () => (latestEventTimestamp ? new Date(latestEventTimestamp) : undefined),
-    [latestEventTimestamp],
+    () => (latestEvent ? new Date(latestEvent.timestamp) : undefined),
+    [latestEvent],
   );
-
-  useEffect(() => {
-    if (!lastEventDate) {
-      setElapsedText('');
-      return undefined;
-    }
-
-    const updateElapsed = () => {
-      const diff = Date.now() - lastEventDate.getTime();
-      setElapsedText(formatDuration(diff));
-    };
-
-    updateElapsed();
-    const id = window.setInterval(updateElapsed, 1000);
-    return () => window.clearInterval(id);
-  }, [lastEventDate]);
 
   return (
     <BaseTile
@@ -74,8 +55,8 @@ export const RecencyTile: React.FC<RecencyTileProps> = ({
     >
       {lastEventDate ? (
         <div className="elapsed-timer">
-          <div className="elapsed-time">{elapsedText}</div>
-          <div className="elapsed-meta">Last event at {lastEventDate.toLocaleString()}</div>
+          <div className="elapsed-time">{latestEvent?.value}</div>
+          <div className="elapsed-meta">At {lastEventDate.toLocaleString()}</div>
         </div>
       ) : (
         <p className="muted">No events yet</p>
