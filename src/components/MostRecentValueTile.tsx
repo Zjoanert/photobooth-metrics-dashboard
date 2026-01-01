@@ -42,7 +42,10 @@ export const MostRecentValueTile: React.FC<RecencyTileProps> = ({
     >
       {lastEventDate ? (
         <div className="elapsed-timer">
-          <div className="elapsed-time">{latestEvent?.value}</div>
+          <div className="elapsed-time">
+            {latestEvent?.value}
+            {tile.unit && <span className="kpi-unit"> {tile.unit}</span>}
+          </div>
           <div className="elapsed-meta">At {lastEventDate.toLocaleString()}</div>
         </div>
       ) : (
