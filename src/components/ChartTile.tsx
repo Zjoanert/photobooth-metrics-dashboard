@@ -35,8 +35,8 @@ export const ChartTile: React.FC<ChartTileProps> = ({
   );
   const yDomain = useMemo(() => {
     if (!values.length) return undefined;
-    const max = Math.max(...values);
-    const min = Math.min(...values);
+    const max = Math.ceil(Math.max(...values));
+    const min = Math.floor(Math.min(...values));
     return { min, max };
   }, [values]);
   const yTicks = useMemo(() => {
