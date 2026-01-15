@@ -15,7 +15,7 @@ interface PersistedDashboardState {
  */
 const createInitialPresets = (): DashboardPreset[] => {
   const defaultTiles: TileConfig[] = [
-    { "id": "custom-1767120434597",
+    { "id": "fotostrips",
       "type": "kpi",
       "label": "Fotostrip gestart",
       "endpointKey": "start-photo",
@@ -26,7 +26,7 @@ const createInitialPresets = (): DashboardPreset[] => {
       "eventName": "start-photo",
       "unit": "keren" 
     }, { 
-      "id": "custom-1767110486811",
+      "id": "remaining-space",
       "type": "most-recent",
       "label": "Ruimte over",
       "endpointKey": "remaining-space",
@@ -36,6 +36,17 @@ const createInitialPresets = (): DashboardPreset[] => {
       "applicationName": "storage",
       "eventName": "remaining-space",
       "unit": "MB" 
+    }
+    { "id": "camera-errors",
+      "type": "kpi",
+      "label": "Camera fouten",
+      "endpointKey": "fail-capture",
+      "kpiStat": "count",
+      "timeMode": "global",
+      "decimals": 0, 
+      "applicationName": "camera",
+      "eventName": "fail-capture",
+      "unit": "keren" 
     }, { 
       "id": "total-prints",
       "type": "kpi",
