@@ -53,6 +53,11 @@ export const LogsPage: React.FC = () => {
     [entries],
   );
 
+  const sortedEntriesDescending = useMemo(
+    () => [...sortedEntries].reverse(),
+    [sortedEntries],
+  );
+
   const toggleLevel = (level: LogLevel) => {
     setSelectedLevels((prev) =>
       prev.includes(level) ? prev.filter((item) => item !== level) : [...prev, level],
@@ -146,7 +151,7 @@ export const LogsPage: React.FC = () => {
           </header>
 
           <LogLines
-            entries={sortedEntries}
+            entries={sortedEntriesDescending}
             isLoading={isLoading}
             error={error}
             datesError={datesError}
