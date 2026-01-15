@@ -18,12 +18,12 @@ const createInitialPresets = (): DashboardPreset[] => {
     { "id": "custom-1767120434597",
       "type": "kpi",
       "label": "Fotostrip gestart",
-      "endpointKey": "start-foto",
+      "endpointKey": "start-photo",
       "kpiStat": "count",
       "timeMode": "global",
       "decimals": 0, 
       "applicationName": "frontend",
-      "eventName": "start-foto",
+      "eventName": "start-photo",
       "unit": "keren" 
     }, { 
       "id": "custom-1767110486811",
@@ -112,7 +112,7 @@ const createInitialPresets = (): DashboardPreset[] => {
       "id": "avg-photo-time",
       "type": "kpi",
       "label": "Avg. photo time (s)",
-      "endpointKey": "capture-image-seconds",
+      "endpointKey": "capture-time",
       "kpiStat": "average",
       "timeMode": "global",
       "unit": "s",
@@ -145,13 +145,13 @@ const createInitialPresets = (): DashboardPreset[] => {
       "id": "total-photos",
       "type": "kpi",
       "label": "Geen fotostrip gemaakt",
-      "endpointKey": "cancel-foto",
+      "endpointKey": "cancel-photo",
       "kpiStat": "count",
       "timeMode": "global",
       "unit": "keren",
       "decimals": 0, 
       "applicationName": "frontend",
-      "eventName": "cancel-foto" 
+      "eventName": "cancel-photo" 
     }, { 
       "id": "upload-speed",
       "type": "chart",
